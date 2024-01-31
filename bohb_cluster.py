@@ -44,6 +44,7 @@ ns_host, ns_port = NS.start()
 # Most optimizers are so computationally inexpensive that we can affort to run a
 # worker in parallel to it. Note that this one has to run in the background to
 # not plock!
+train_sequences = ["(((((......)))))"]
 w = LearnaWorker(sleep_interval=0.5, run_id=args.run_id, host=host, nameserver=ns_host, nameserver_port=ns_port)
 w.run(background=True)
 
