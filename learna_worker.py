@@ -63,7 +63,7 @@ class LearnaWorker(Worker):
             matrix_size=config["matrix_size"]
         )
 
-        rewards = training(env_config, agent_config, network_config, self.train_sequences)
+        rewards = training(env_config, agent_config, network_config, self.train_sequences, budget)
         loss = 1 - (sum([reward == 1 for reward in rewards]) / len(rewards))
         loss = 1 - np.mean(rewards[-100])
 

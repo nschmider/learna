@@ -35,7 +35,7 @@ def make_synthetic_data(amount, length):
     return dot_brackets
 
 
-def training(env_config, agent_config, network_config, dot_brackets):
+def training(env_config, agent_config, network_config, dot_brackets, budget):
     """
     Training with one configuration of the environment and the agent.
 
@@ -44,6 +44,7 @@ def training(env_config, agent_config, network_config, dot_brackets):
         agent_config: The configuration of the agent.
         network_config: The configuration of the agent's network.
         dot_brackets: The learning targets.
+        budget: The budget for the configuration, here epochs.
 
     Returns:
         Rewards
@@ -52,7 +53,7 @@ def training(env_config, agent_config, network_config, dot_brackets):
     agent = get_agent(environment, agent_config, network_config)
     rewards = []
 
-    for _ in tqdm(range(20000)):
+    for _ in tqdm(range(budget)):
         # Initialize episode
         states = environment.reset()
         terminal = False
@@ -68,9 +69,9 @@ def training(env_config, agent_config, network_config, dot_brackets):
 if __name__ == "__main__":
     dot_bracket = "(((((......)))))"
     # dot_brackets = make_synthetic_data(10000, 8)
-    # dot_brackets = [dot_bracket]
-    dot_brackets = read_eterna()
-    dot_brackets = [dot_bracket for dot_bracket in dot_brackets if len(dot_bracket) == 16]
+    dot_brackets = [dot_bracket]
+    # dot_brackets = read_eterna()
+    # dot_brackets = [dot_bracket for dot_bracket in dot_brackets if len(dot_bracket) == 16]
 
     env_config = RnaDesignEnvironmentConfig(matrix_size=21, reward_exponent=1.0, padding_mode="wrap")
     agent_config = AgentConfig(learning_rate=1e-4,
@@ -85,7 +86,7 @@ if __name__ == "__main__":
                                    fc_activation="relu",
                                    fc_layer_units=(50, 20))
 
-    rewards = training(env_config, agent_config, network_config, dot_brackets)
+    rewards = training(env_config, agent_config, network_config, dot_brackets, 20000)
     rewards = [np.mean(rewards[i:i+100]) for i in range(0, len(rewards), 10)]
     plt.plot(np.arange(len(rewards)), rewards)
     plt.show()

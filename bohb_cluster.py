@@ -19,8 +19,8 @@ parser.add_argument('--n_iterations', type=int,   help='Number of iterations per
 parser.add_argument('--n_workers', type=int,   help='Number of workers to run in parallel.', default=2)
 parser.add_argument('--worker', help='Flag to turn this into a worker process', action='store_true')
 parser.add_argument('--run_id', type=str, help='A unique run id for this optimization run. An easy option is to use the job id of the clusters scheduler.')
-parser.add_argument('--nic_name',type=str, help='Which network interface to use for communication.')
-parser.add_argument('--shared_directory',type=str, help='A directory that is accessible for all processes, e.g. a NFS share.')
+parser.add_argument('--nic_name', type=str, help='Which network interface to use for communication.')
+parser.add_argument('--shared_directory', type=str, help='A directory that is accessible for all processes, e.g. a NFS share.')
 
 
 args=parser.parse_args()
@@ -30,18 +30,19 @@ host = hpns.nic_name_to_host(args.nic_name)
 
 
 if args.worker:
-	time.sleep(5)	# short artificial delay to make sure the nameserver is already running
-	w = LearnaWorker(sleep_interval=0.5, run_id=args.run_id, host=host)
-	w.load_nameserver_credentials(working_directory=args.shared_directory)
-	w.run(background=False)
-	exit(0)
+    time.sleep(5)	# short artificial delay to make sure the nameserver is already running
+    train_sequences = ["(((((......)))))"]
+    w = LearnaWorker(num_cores=1, train_sequences=train_sequences, sleep_interval=0.5, run_id=args.run_id, host=host)
+    w.load_nameserver_credentials(working_directory=args.shared_directory)
+    w.run(background=False)
+    exit(0)
 
 # Start a nameserver:
 # We now start the nameserver with the host name from above and a random open port (by setting the port to 0)
 NS = hpns.NameServer(run_id=args.run_id, host=host, port=0, working_directory=args.shared_directory)
 ns_host, ns_port = NS.start()
 
-# Most optimizers are so computationally inexpensive that we can affort to run a
+# Most optimizers are so computationally inexpensive that we can afford to run a
 # worker in parallel to it. Note that this one has to run in the background to
 # not plock!
 train_sequences = ["(((((......)))))"]
