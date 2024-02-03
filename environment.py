@@ -169,8 +169,8 @@ class RnaDesignEnvironment(Environment):
                 mode=self._padding_mode)
         if pad_width < 0:
             # Crop the image if the desired matrix is smaller than the matrix
-            half_matrix_plus = np.ceil(self._matrix_size / 2)
-            half_matrix_minus = np.floor(self._matrix_size / 2)
+            half_matrix_plus = int(np.ceil(self._matrix_size / 2))
+            half_matrix_minus = int(np.floor(self._matrix_size / 2))
             min_index = max(self._current_site - half_matrix_plus, 0)
             max_index = min(
                 min_index + self._matrix_size,

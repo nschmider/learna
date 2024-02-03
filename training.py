@@ -3,7 +3,7 @@ from matplotlib import pyplot as plt
 from tqdm import tqdm
 from environment import RnaDesignEnvironment, RnaDesignEnvironmentConfig
 from agent import AgentConfig, ppo_agent_kwargs, get_agent, NetworkConfig, get_network
-from read_eterna import read_eterna
+# from read_eterna import read_eterna
 
 
 def make_synthetic_data(amount, length):
