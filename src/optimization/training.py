@@ -121,6 +121,6 @@ if __name__ == "__main__":
                                    fc_layer_units=(50, 20))
 
     rewards = training(env_config, agent_config, network_config, dot_brackets, 20000)
-    rewards = [np.mean(rewards[i:i+100]) for i in range(0, len(rewards), 10)]
-    plt.plot(np.arange(len(rewards)), rewards)
-    plt.show()
+    # rewards = [np.mean(rewards[i:i+100]) for i in range(0, len(rewards), 10)]
+    # plt.plot(np.arange(len(rewards)), rewards)
+    # plt.show()

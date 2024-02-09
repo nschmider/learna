@@ -1,12 +1,14 @@
 import logging
 logging.basicConfig(level=logging.DEBUG)
 import argparse
+from pathlib import Path
 import pickle
 import time
 
 import hpbandster.core.nameserver as hpns
 import hpbandster.core.result as hpres
 from hpbandster.optimizers import BOHB as BOHB
+import numpy as np
 
 from src.data.read_data import read_test_data, read_train_data, read_validation_data
 from src.optimization.learna_worker import LearnaWorker
@@ -32,10 +34,17 @@ host = hpns.nic_name_to_host(args.nic_name)
 
 train_sequences = read_train_data()
 validation_sequences = read_validation_data()
+test_sequences = read_test_data()
 
 if args.worker:
     time.sleep(5)	# short artificial delay to make sure the nameserver is already running
-    w = LearnaWorker(num_cores=args.n_cores, train_sequences=train_sequences, validation_sequences=validation_sequences, run_id=args.run_id, host=host)
+    w = LearnaWorker(
+        num_cores=args.n_cores,
+        train_sequences=train_sequences,
+        validation_sequences=validation_sequences,
+        run_id=args.run_id,
+        host=host
+    )
     w.load_nameserver_credentials(working_directory=args.shared_directory)
     w.run(background=False)
     exit(0)
@@ -48,7 +57,15 @@ ns_host, ns_port = NS.start()
 # Most optimizers are so computationally inexpensive that we can afford to run a
 # worker in parallel to it. Note that this one has to run in the background to
 # not plock!
-w = LearnaWorker(num_cores=args.n_cores, train_sequences=train_sequences, validation_sequences=validation_sequences, run_id=args.run_id, host=host, nameserver=ns_host, nameserver_port=ns_port)
+w = LearnaWorker(
+    num_cores=args.n_cores,
+    train_sequences=train_sequences,
+    validation_sequences=validation_sequences,
+    run_id=args.run_id,
+    host=host,
+    nameserver=ns_host,
+    nameserver_port=ns_port
+)
 w.run(background=True)
 
 # Run an optimizer
@@ -77,6 +94,24 @@ NS.shutdown()
 
 id2config = res.get_id2config_mapping()
 incumbent = res.get_incumbent_id()
+best_config = id2config[incumbent]['config']
 
-print('Best found configuration:', id2config[incumbent]['config'])
+w = LearnaWorker(
+    num_cores=args.n_cores,
+    train_sequences=train_sequences,
+    validation_sequences=test_sequences,
+    run_id=args.run_id,
+    host=host,
+    nameserver=ns_host,
+    nameserver_port=ns_port
+)
+rewards = w.compute(best_config, 10)
+
+save_path = Path("trained_models")
+save_path.mkdir(parents=True, exist_ok=True)
+agent.save_model(directory=save_path.joinpath("last_model"))
+
+print('Best found configuration:', best_config)
 print('A total of %i unique configurations where sampled.' % len(id2config.keys()))
+print(f'Mean rewards: {np.mean(rewards)}')
+print(f'Solved test sequences: {sum(np.min(rewards, axis=1) == 1)}')
