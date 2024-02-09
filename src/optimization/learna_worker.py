@@ -44,11 +44,11 @@ class LearnaWorker(Worker):
         network_config = NetworkConfig(
             conv_sizes=conv_sizes,
             conv_channels=conv_channels,
-            fc_layer_units=(config["fc_units1"], config["fc_units2"]),
-            fc_activation=config["fc_activation"],
-            num_lstm_layers=config["num_lstm_layers"],
-            lstm_units=config["lstm_units"],
-            lstm_horizon=config["lstm_horizon"]
+            fc_layer_units=(50, 20), # (config["fc_units1"], config["fc_units2"]),
+            fc_activation="relu", # config["fc_activation"],
+            num_lstm_layers=1, # config["num_lstm_layers"],
+            lstm_units=1, # config["lstm_units"],
+            lstm_horizon=12, # config["lstm_horizon"]
         )
 
         agent_config = AgentConfig(
@@ -146,36 +146,36 @@ class LearnaWorker(Worker):
                 "num_pooling_layers", lower=0, upper=4, default_value=4
             )
         )
-        config_space.add_hyperparameter(
-            CS.UniformIntegerHyperparameter(
-                "num_lstm_layers", lower=0, upper=1, default_value=0
-            )
-        )
-        config_space.add_hyperparameter(
-            CS.UniformIntegerHyperparameter(
-                "lstm_units", lower=1, upper=64, default_value=1
-            )
-        )
-        config_space.add_hyperparameter(
-            CS.UniformIntegerHyperparameter(
-                "lstm_horizon", lower=1, upper=64, default_value=12
-            )
-        )
-        config_space.add_hyperparameter(
-            CS.CategoricalHyperparameter(
-                "fc_activation", choices=["relu", "sigmoid", "tanh"], default_value="relu"
-            )
-        )
-        config_space.add_hyperparameter(
-            CS.UniformIntegerHyperparameter(
-                "fc_units1", lower=0, upper=64, default_value=50
-            )
-        )
-        config_space.add_hyperparameter(
-            CS.UniformIntegerHyperparameter(
-                "fc_units2", lower=0, upper=64, default_value=20
-            )
-        )
+        # config_space.add_hyperparameter(
+        #     CS.UniformIntegerHyperparameter(
+        #         "num_lstm_layers", lower=0, upper=1, default_value=0
+        #     )
+        # )
+        # config_space.add_hyperparameter(
+        #     CS.UniformIntegerHyperparameter(
+        #         "lstm_units", lower=1, upper=64, default_value=1
+        #     )
+        # )
+        # config_space.add_hyperparameter(
+        #     CS.UniformIntegerHyperparameter(
+        #         "lstm_horizon", lower=1, upper=64, default_value=12
+        #     )
+        # )
+        # config_space.add_hyperparameter(
+        #     CS.CategoricalHyperparameter(
+        #         "fc_activation", choices=["relu", "sigmoid", "tanh"], default_value="relu"
+        #     )
+        # )
+        # config_space.add_hyperparameter(
+        #     CS.UniformIntegerHyperparameter(
+        #         "fc_units1", lower=0, upper=64, default_value=50
+        #     )
+        # )
+        # config_space.add_hyperparameter(
+        #     CS.UniformIntegerHyperparameter(
+        #         "fc_units2", lower=0, upper=64, default_value=20
+        #     )
+        # )
 
         return config_space
     
