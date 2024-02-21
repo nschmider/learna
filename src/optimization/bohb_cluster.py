@@ -10,7 +10,7 @@ import hpbandster.core.result as hpres
 from hpbandster.optimizers import BOHB as BOHB
 import numpy as np
 
-from src.data.read_data import read_test_data, read_train_data, read_validation_data
+from src.data.read_data import read_test_data, read_train_data, read_validation_data, filter_data
 from src.optimization.learna_worker import LearnaWorker
 
 
@@ -28,13 +28,15 @@ parser.add_argument('--shared_directory', type=str, help='A directory that is ac
 
 args=parser.parse_args()
 
+result_logger = hpres.json_result_logger(directory=args.shared_directory, overwrite=False)
+
 # Every process has to lookup the hostname
 host = hpns.nic_name_to_host(args.nic_name)
 
 
-train_sequences = read_train_data()
-validation_sequences = read_validation_data()
-test_sequences = read_test_data()
+train_sequences = filter_data(read_train_data(), 32)
+validation_sequences = filter_data(read_validation_data(), 32)
+test_sequences = filter_data(read_test_data(), 32)
 
 if args.worker:
     time.sleep(5)	# short artificial delay to make sure the nameserver is already running
@@ -64,15 +66,16 @@ w = LearnaWorker(
     run_id=args.run_id,
     host=host,
     nameserver=ns_host,
-    nameserver_port=ns_port
+    nameserver_port=ns_port,
+    result_logger=result_logger
 )
 w.run(background=True)
 
 # Run an optimizer
 # We now have to specify the host, and the nameserver information
 bohb = BOHB(
-    configspace = LearnaWorker.get_configspace(),
-    run_id = args.run_id,
+    configspace=LearnaWorker.get_configspace(),
+    run_id=args.run_id,
     host=host,
     nameserver=ns_host,
     nameserver_port=ns_port,
@@ -105,13 +108,14 @@ w = LearnaWorker(
     nameserver=ns_host,
     nameserver_port=ns_port
 )
-rewards = w.compute(best_config, 10)
 
-save_path = Path("trained_models")
-save_path.mkdir(parents=True, exist_ok=True)
-agent.save_model(directory=save_path.joinpath("last_model"))
+res = w.compute(best_config, 1000)
+
+# save_path = Path("trained_models")
+# save_path.mkdir(parents=True, exist_ok=True)
+# agent.save_model(directory=save_path.joinpath("last_model"))
 
 print('Best found configuration:', best_config)
 print('A total of %i unique configurations where sampled.' % len(id2config.keys()))
-print(f'Mean rewards: {np.mean(rewards)}')
-print(f'Solved test sequences: {sum(np.min(rewards, axis=1) == 1)}')
+print(f'Mean test rewards: {res["loss"]}')
+print(f'Solved test sequences: {sum(np.min(res["info"], axis=1) == 1)}')

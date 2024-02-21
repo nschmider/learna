@@ -31,8 +31,8 @@ class RnaDesignEnvironmentConfig:
         reward_exponent: A parameter to shape the reward function.
     """
 
-    matrix_size: int = 12
-    padding_mode: str = "reflect"
+    matrix_size: int = 32
+    padding_mode: str = "constant"
     pad_lower: bool = False
     reward_exponent: float = 1.0
 

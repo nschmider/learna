@@ -34,3 +34,7 @@ def read_validation_data():
             if not line.startswith(">"):
                 dot_brackets.append(line)
     return dot_brackets
+
+
+def filter_data(dot_brackets, max_length):
+    return [dot_bracket for dot_bracket in dot_brackets if len(dot_bracket) <= max_length]

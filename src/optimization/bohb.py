@@ -1,5 +1,5 @@
 import logging
-logging.basicConfig(level=logging.WARNING)
+logging.basicConfig(level=logging.DEBUG)
 
 import argparse
 
@@ -7,6 +7,7 @@ import hpbandster.core.nameserver as hpns
 import hpbandster.core.result as hpres
 from hpbandster.optimizers import BOHB
 
+from src.data.read_data import read_test_data, read_train_data, read_validation_data, filter_data
 from src.optimization.learna_worker import LearnaWorker
 
 
@@ -23,8 +24,9 @@ NS.start()
 # Besides the sleep_interval, we need to define the nameserver information and
 # the same run_id as above. After that, we can start the worker in the background,
 # where it will wait for incoming configurations to evaluate.
-train_sequences = ["(((((......)))))"]
-w = LearnaWorker(num_cores=4, train_sequences=train_sequences, nameserver='127.0.0.1', run_id='example1')
+train_sequences = filter_data(read_train_data(), 32)
+validation_sequences = filter_data(read_validation_data(), 32)
+w = LearnaWorker(num_cores=1, train_sequences=train_sequences, validation_sequences=validation_sequences, nameserver='127.0.0.1', run_id='example1')
 w.run(background=True)
 
 # Step 3: Run an optimizer
@@ -32,8 +34,8 @@ w.run(background=True)
 # Here, we run BOHB, but that is not essential.
 # The run method will return the `Result` that contains all runs performed.
 bohb = BOHB(
-    configspace = w.get_configspace(),
-    run_id = 'example1', nameserver='127.0.0.1',
+    configspace=w.get_configspace(),
+    run_id='example1', nameserver='127.0.0.1',
     min_budget=1, max_budget=9
 )
 res = bohb.run(n_iterations=4, min_n_workers=1)
@@ -54,4 +56,4 @@ incumbent = res.get_incumbent_id()
 print('Best found configuration:', id2config[incumbent]['config'])
 print('A total of %i unique configurations where sampled.' % len(id2config.keys()))
 print('A total of %i runs where executed.' % len(res.get_all_runs()))
-print('Total budget corresponds to %.1f full function evaluations.'%(sum([r.budget for r in res.get_all_runs()])/243))
+print('Total budget corresponds to %.1f full function evaluations.'%(sum([r.budget for r in res.get_all_runs()])/9))

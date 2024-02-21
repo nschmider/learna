@@ -18,14 +18,15 @@ class NetworkConfig:
         fc_activation: The activation function.
         fc_layer_units: The list of output units of the dense layers.
     """
-    conv_sizes: Tuple[int] = (3, 5, 5)
-    conv_channels: Tuple[int] = (8, 16, 32)
-    num_pooling_layers: int = 4
-    lstm_units: int = 1
-    num_lstm_layers: int = 1
+    conv_sizes: Tuple[int] = (7, 9)
+    conv_channels: Tuple[int] = (8, 16)
+    num_pooling_layers: int = 1
+    lstm_units: int = 0
+    num_lstm_layers: int = 0
     lstm_horizon: int = 12
     fc_activation: str = "relu"
     fc_layer_units: Tuple[int] = (50, 20)
+
 
 def get_network(network_config):
     """
@@ -115,6 +116,7 @@ def get_network(network_config):
     
     return network
 
+
 @dataclass
 class AgentConfig:
     """
@@ -123,14 +125,14 @@ class AgentConfig:
     Default values describe:
         learning_rate: The learning rate to use by PPO.
         batch_size: Integer of the batch size.
-        optimization_steps: The number of optimization steps.
         likelihood_ratio_clipping: Likelihood ratio clipping for policy gradient.
         entropy_regularization: Entropy regularization weight.
     """
     learning_rate: float = 5e-4
-    batch_size: int = 5
+    batch_size: int = 16
     likelihood_ratio_clipping: float = 0.3
     entropy_regularization: float = 1.5e-3
+
 
 def ppo_agent_kwargs(agent_config):
     """
@@ -150,6 +152,7 @@ def ppo_agent_kwargs(agent_config):
         entropy_regularization=agent_config.entropy_regularization,
         max_episode_timesteps=10000
     )
+
 
 def get_agent(environment, agent_config, network_config):
     """
