@@ -12,7 +12,7 @@ def read_eterna():
 def read_train_data(data_dir=None):
     file_path = "data/train.fasta"
     if data_dir is not None:
-        file_path = data_dir + file_path
+        file_path = data_dir + "/" + file_path
     dot_brackets = []
     with open(file_path, "r") as file:
         for line in file:
@@ -24,7 +24,7 @@ def read_train_data(data_dir=None):
 def read_test_data(data_dir=None):
     file_path = "data/test.fasta"
     if data_dir is not None:
-        file_path = data_dir + file_path
+        file_path = data_dir + "/" + file_path
     dot_brackets = []
     with open(file_path, "r") as file:
         for line in file:
@@ -36,7 +36,7 @@ def read_test_data(data_dir=None):
 def read_validation_data(data_dir=None):
     file_path = "data/valid.fasta"
     if data_dir is not None:
-        file_path = data_dir + file_path
+        file_path = data_dir + "/" + file_path
     dot_brackets = []
     with open(file_path, "r") as file:
         for line in file:
