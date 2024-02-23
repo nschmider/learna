@@ -32,7 +32,7 @@ parser.add_argument('--data_directory', type=str, help='A directory that contain
 
 args=parser.parse_args()
 
-result_logger = hpres.json_result_logger(directory=args.shared_directory, overwrite=False)
+result_logger = hpres.json_result_logger(directory=args.shared_directory, overwrite=True)
 
 # Every process has to lookup the hostname
 host = hpns.nic_name_to_host(args.nic_name)
