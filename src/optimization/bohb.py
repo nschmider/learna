@@ -6,9 +6,14 @@ import argparse
 import hpbandster.core.nameserver as hpns
 import hpbandster.core.result as hpres
 from hpbandster.optimizers import BOHB
+import numpy as np
+from tensorforce.agents import Agent
 
 from src.data.read_data import read_test_data, read_train_data, read_validation_data, filter_data
+from src.learna.environment import RnaDesignEnvironment
+from src.learna.agent import get_agent, get_network, ppo_agent_kwargs
 from src.optimization.learna_worker import LearnaWorker
+from src.optimization.training import evaluate, get_configs
 
 
 # Step 1: Start a nameserver
@@ -26,6 +31,7 @@ NS.start()
 # where it will wait for incoming configurations to evaluate.
 train_sequences = filter_data(read_train_data(), 32)
 validation_sequences = filter_data(read_validation_data(), 32)
+test_sequences = filter_data(read_test_data(), 32)
 w = LearnaWorker(num_cores=1, train_sequences=train_sequences, validation_sequences=validation_sequences, nameserver='127.0.0.1', run_id='example1')
 w.run(background=True)
 
@@ -36,9 +42,9 @@ w.run(background=True)
 bohb = BOHB(
     configspace=w.get_configspace(),
     run_id='example1', nameserver='127.0.0.1',
-    min_budget=1, max_budget=9
+    min_budget=1, max_budget=1
 )
-res = bohb.run(n_iterations=4, min_n_workers=1)
+res = bohb.run(n_iterations=1, min_n_workers=1)
 
 # Step 4: Shutdown
 # After the optimizer run, we must shutdown the master and the nameserver.
@@ -52,8 +58,28 @@ NS.shutdown()
 # Here we simply print out the best config and some statistics about the performed runs.
 id2config = res.get_id2config_mapping()
 incumbent = res.get_incumbent_id()
+best_config = id2config[incumbent]['config']
 
-print('Best found configuration:', id2config[incumbent]['config'])
+env_config, agent_config, network_config = get_configs(best_config)
+environment = RnaDesignEnvironment(dot_brackets=test_sequences, env_config=env_config)
+
+best_agent = Agent.load(
+    directory="%i_%i_%i/last_model" % (incumbent[0], incumbent[1], incumbent[2]),
+    agent="ppo",
+    environment=environment,
+    network=get_network(network_config),
+    **ppo_agent_kwargs(agent_config)
+)
+
+rewards = evaluate(
+    env_config=env_config,
+    agent=best_agent,
+    dot_brackets=test_sequences,
+    tries=5
+)
+
+max_rewards = np.max(rewards, axis=1)
+print('Best found configuration:', best_config)
 print('A total of %i unique configurations where sampled.' % len(id2config.keys()))
-print('A total of %i runs where executed.' % len(res.get_all_runs()))
-print('Total budget corresponds to %.1f full function evaluations.'%(sum([r.budget for r in res.get_all_runs()])/9))
+print(f'Mean test rewards: {np.mean(max_rewards)}')
+print(f'Solved test sequences: {sum(max_rewards == 1) / len(test_sequences)}')

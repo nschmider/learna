@@ -1,10 +1,14 @@
+import os
+from pathlib import Path
+import shutil
+
 import ConfigSpace as CS
 from hpbandster.core.worker import Worker
 import numpy as np
 
 from src.learna.agent import AgentConfig, NetworkConfig
 from src.learna.environment import RnaDesignEnvironmentConfig
-from src.optimization.training import training, evaluate
+from src.optimization.training import training, evaluate, get_configs
 
 
 class LearnaWorker(Worker):
@@ -14,7 +18,7 @@ class LearnaWorker(Worker):
         self.train_sequences = train_sequences
         self.validation_sequences = validation_sequences
 
-    def compute(self, config, budget, **kwargs):
+    def compute(self, config, budget, working_directory, config_id, **kwargs):
         """
         Computes the loss for the given configuration
 
@@ -25,55 +29,23 @@ class LearnaWorker(Worker):
         Returns:
             The loss for the configuration.
         """
-
         # config = self._fill_config(config)
-
-        # used_conv_layers = [
-        #     layer
-        #     for layer in range(1, 17)
-        #     if config[f"conv_size{layer}"] > 0
-        #     and config[f"conv_channel{layer}"] > 0
-        # ]
-        # conv_sizes = tuple(
-        #     config[f"conv_size{layer}"] for layer in used_conv_layers
-        # )
-        # conv_channels = tuple(
-        #     config[f"conv_channel{layer}"] for layer in used_conv_layers
-        # )
-        
-        # network_config = NetworkConfig(
-        #     conv_sizes=conv_sizes,
-        #     conv_channels=conv_channels,
-        #     fc_layer_units=(config["fc_units1"], config["fc_units2"]),
-        #     fc_activation=config["fc_activation"],
-        #     num_lstm_layers=config["num_lstm_layers"],
-        #     lstm_units=config["lstm_units"],
-        #     lstm_horizon=config["lstm_horizon"]
-        # )
-
-        # agent_config = AgentConfig(
-        #     learning_rate=config["learning_rate"],
-        #     batch_size=config["batch_size"],
-        #     entropy_regularization=config["entropy_regularization"],
-        #     likelihood_ratio_clipping=config["likelihood_ratio_clipping"],
-        # )
-        
-        # env_config = RnaDesignEnvironmentConfig(
-        #     reward_exponent=config["reward_exponent"],
-        #     padding_mode=config["padding_mode"],
-        #     pad_lower=config["pad_lower"],
-        #     matrix_size=config["matrix_size"]
-        # )
-
-        network_config = NetworkConfig()
-        agent_config = AgentConfig(
-            learning_rate=config["learning_rate"]
+        tmp_dir = os.path.join(
+            working_directory, "%i_%i_%i" % (config_id[0], config_id[1], config_id[2])
         )
-        env_config = RnaDesignEnvironmentConfig()
+        shutil.rmtree(tmp_dir, ignore_errors=True)
+        os.makedirs(tmp_dir, exist_ok=True)
+
+        env_config, agent_config, network_config = get_configs(config)
 
         agent = training(env_config, agent_config, network_config, self.train_sequences, int(budget))
         rewards = evaluate(env_config, agent, self.validation_sequences, 5)
-        min_distances = np.min(rewards, 1)
+
+        save_path = Path(tmp_dir)
+        save_path.mkdir(parents=True, exist_ok=True)
+        agent.save(directory=save_path.joinpath("last_model"))
+
+        min_distances = 1 - np.max(rewards, 1)
         normalized_solved_sequences = sum(min_distances == 0) / len(self.validation_sequences)
         mean_distance = np.mean(min_distances)
 
