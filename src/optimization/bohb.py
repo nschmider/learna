@@ -32,7 +32,13 @@ NS.start()
 train_sequences = filter_data(read_train_data(), 32)
 validation_sequences = filter_data(read_validation_data(), 32)
 test_sequences = filter_data(read_test_data(), 32)
-w = LearnaWorker(num_cores=1, train_sequences=train_sequences, validation_sequences=validation_sequences, nameserver='127.0.0.1', run_id='example1')
+w = LearnaWorker(
+    num_cores=1,
+    train_sequences=train_sequences,
+    validation_sequences=validation_sequences,
+    nameserver='127.0.0.1',
+    run_id='example1'
+)
 w.run(background=True)
 
 # Step 3: Run an optimizer

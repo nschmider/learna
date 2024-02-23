@@ -64,7 +64,6 @@ ns_host, ns_port = NS.start()
 # worker in parallel to it. Note that this one has to run in the background to
 # not plock!
 w = LearnaWorker(
-    data_dir=args.shared_directory,
     num_cores=args.n_cores,
     train_sequences=train_sequences,
     validation_sequences=validation_sequences,
