@@ -89,12 +89,6 @@ res = bohb.run(n_iterations=args.n_iterations, min_n_workers=args.n_workers)
 with open(os.path.join(args.shared_directory, 'results.pkl'), 'wb') as fh:
 	pickle.dump(res, fh)
 
-
-# Step 4: Shutdown
-# After the optimizer run, we must shutdown the master and the nameserver.
-bohb.shutdown(shutdown_workers=True)
-NS.shutdown()
-
 id2config = res.get_id2config_mapping()
 incumbent = res.get_incumbent_id()
 best_config = id2config[incumbent]['config']
@@ -110,6 +104,11 @@ w = LearnaWorker(
 )
 
 res = w.compute(best_config, 1000)
+
+# Step 4: Shutdown
+# After the optimizer run, we must shutdown the master and the nameserver.
+bohb.shutdown(shutdown_workers=True)
+NS.shutdown()
 
 # save_path = Path("trained_models")
 # save_path.mkdir(parents=True, exist_ok=True)
