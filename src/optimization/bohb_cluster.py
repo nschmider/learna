@@ -66,8 +66,7 @@ w = LearnaWorker(
     run_id=args.run_id,
     host=host,
     nameserver=ns_host,
-    nameserver_port=ns_port,
-    result_logger=result_logger
+    nameserver_port=ns_port
 )
 w.run(background=True)
 
@@ -79,6 +78,7 @@ bohb = BOHB(
     host=host,
     nameserver=ns_host,
     nameserver_port=ns_port,
+    result_logger=result_logger,
     min_budget=args.min_budget, max_budget=args.max_budget
 )
 res = bohb.run(n_iterations=args.n_iterations, min_n_workers=args.n_workers)
