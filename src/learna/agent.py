@@ -129,7 +129,7 @@ class AgentConfig:
         entropy_regularization: Entropy regularization weight.
     """
     learning_rate: float = 5e-4
-    batch_size: int = 16
+    batch_size: int = 8
     likelihood_ratio_clipping: float = 0.3
     entropy_regularization: float = 1.5e-3
 
@@ -150,7 +150,7 @@ def ppo_agent_kwargs(agent_config):
         learning_rate=agent_config.learning_rate,
         likelihood_ratio_clipping=agent_config.likelihood_ratio_clipping,
         entropy_regularization=agent_config.entropy_regularization,
-        max_episode_timesteps=10000
+        max_episode_timesteps=501
     )
 
 
