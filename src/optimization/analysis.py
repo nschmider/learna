@@ -4,7 +4,7 @@ import hpbandster.visualization as hpvis
 
 
 # load the example run from the log files
-result = hpres.logged_results_to_HBS_result('../results')
+result = hpres.logged_results_to_HBS_result('results')
 
 # get all executed runs
 all_runs = result.get_all_runs()
@@ -25,11 +25,11 @@ inc_run = inc_runs[-1]
 #optimization, and all the additional information
 inc_loss = inc_run.loss
 inc_config = id2conf[inc_id]['config']
-inc_test_loss = inc_run.info['test accuracy']
+inc_test_loss = inc_run.info
 
 print('Best found configuration:')
 print(inc_config)
-print('It achieved accuracies of %f (validation) and %f (test).'%(1-inc_loss, inc_test_loss))
+print('It achieved accuracies of %f (validation) and %f of targets were solved.'%(1-inc_loss, inc_test_loss))
 
 
 # Let's plot the observed losses grouped by budget,
@@ -49,4 +49,4 @@ hpvis.correlation_across_budgets(result)
 # The next plot compares the performance of configs picked by the model vs. random ones
 hpvis.performance_histogram_model_vs_random(all_runs, id2conf) 
 
-plt.savefig('../../../plots/analysis.png', bbox_inches='tight')
+plt.savefig('learna/plots/analysis.png', bbox_inches='tight')
