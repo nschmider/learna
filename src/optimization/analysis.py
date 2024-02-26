@@ -42,20 +42,28 @@ print('It achieved accuracies of %f (validation) and solved %f of sequences.'%(1
 
 # Let's plot the observed losses grouped by budget,
 hpvis.losses_over_time(all_runs) 
+plt.tight_layout()
+plt.savefig('learna/plots/losses_over_time.png', bbox_inches='tight')
 
 # the number of concurent runs,
 hpvis.concurrent_runs_over_time(all_runs) 
+plt.tight_layout()
+plt.savefig('learna/plots/concurrent_runs_over_time.png', bbox_inches='tight')
 
 # and the number of finished runs.
 hpvis.finished_runs_over_time(all_runs)
+plt.tight_layout()
+plt.savefig('learna/plots/finished_runs_over_time.png', bbox_inches='tight')
 
 # This one visualizes the spearman rank correlation coefficients of the losses
 # between different budgets.
 hpvis.correlation_across_budgets(result)
+plt.tight_layout()
+plt.savefig('learna/plots/correlation_across_budgets.png', bbox_inches='tight')
 
 # For model based optimizers, one might wonder how much the model actually helped.
 # The next plot compares the performance of configs picked by the model vs. random ones
 hpvis.performance_histogram_model_vs_random(all_runs, id2conf) 
 
 plt.tight_layout()
-plt.savefig('learna/plots/analysis.png', bbox_inches='tight')
+plt.savefig('learna/plots/histogram_model_vs_random.png', bbox_inches='tight')
