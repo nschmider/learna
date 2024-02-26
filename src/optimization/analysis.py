@@ -57,4 +57,5 @@ hpvis.correlation_across_budgets(result)
 # The next plot compares the performance of configs picked by the model vs. random ones
 hpvis.performance_histogram_model_vs_random(all_runs, id2conf) 
 
+plt.tight_layout()
 plt.savefig('learna/plots/analysis.png', bbox_inches='tight')
