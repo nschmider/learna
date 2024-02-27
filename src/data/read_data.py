@@ -17,7 +17,7 @@ def read_train_data(data_dir=None):
     with open(file_path, "r") as file:
         for line in file:
             if not line.startswith(">"):
-                dot_brackets.append(line)
+                dot_brackets.append(line.strip())
     return dot_brackets
 
 
@@ -29,7 +29,7 @@ def read_test_data(data_dir=None):
     with open(file_path, "r") as file:
         for line in file:
             if not line.startswith(">"):
-                dot_brackets.append(line)
+                dot_brackets.append(line.strip())
     return dot_brackets
 
 
@@ -41,7 +41,7 @@ def read_validation_data(data_dir=None):
     with open(file_path, "r") as file:
         for line in file:
             if not line.startswith(">"):
-                dot_brackets.append(line)
+                dot_brackets.append(line.strip())
     return dot_brackets
 
 
