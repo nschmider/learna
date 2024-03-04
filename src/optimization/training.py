@@ -2,6 +2,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 from tqdm import tqdm
 
+from src.data.read_data import read_train_data, filter_data
 from src.learna.environment import RnaDesignEnvironment, RnaDesignEnvironmentConfig
 from src.learna.agent import AgentConfig, ppo_agent_kwargs, get_agent, NetworkConfig, get_network
 
@@ -141,27 +142,25 @@ def get_configs(config):
 
     network_config = NetworkConfig()
     agent_config = AgentConfig(
-        learning_rate=config["learning_rate"]
+        learning_rate=config["learning_rate"], batch_size=64
     )
-    env_config = RnaDesignEnvironmentConfig()
+    env_config = RnaDesignEnvironmentConfig(matrix_size=500)
 
     return env_config, agent_config, network_config
 
 
 if __name__ == "__main__":
     dot_bracket = "(((((......)))))"
-    # dot_brackets = make_synthetic_data(10000, 8)
     dot_brackets = [dot_bracket]
-    # dot_brackets = read_eterna()
-    # dot_brackets = [dot_bracket for dot_bracket in dot_brackets if len(dot_bracket) == 16]
+    dot_brackets = filter_data(read_train_data(), 32)
 
-    env_config = RnaDesignEnvironmentConfig(matrix_size=21, reward_exponent=1.0, padding_mode="wrap")
+    env_config = RnaDesignEnvironmentConfig(matrix_size=32, reward_exponent=1.0, padding_mode="wrap")
     agent_config = AgentConfig(learning_rate=1e-4,
                                batch_size=1,
                                likelihood_ratio_clipping=0.3,
                                entropy_regularization=1.5e-3)
-    network_config = NetworkConfig(conv_sizes=(3, 3, 5, 5, 7, 7, 9), #9), #9),
-                                   conv_channels=(2, 4, 8, 16, 32, 64, 128), #256, #512),
+    network_config = NetworkConfig(conv_sizes=(3, 3),
+                                   conv_channels=(2, 4),
                                    lstm_units=1,
                                    num_lstm_layers=1,
                                    lstm_horizon=12,
@@ -169,6 +168,6 @@ if __name__ == "__main__":
                                    fc_layer_units=(50, 20))
 
     rewards = training(env_config, agent_config, network_config, dot_brackets, 20000)
-    # rewards = [np.mean(rewards[i:i+100]) for i in range(0, len(rewards), 10)]
+    # rewards = [np.mean(rewards[i:i+100]) for i in range(0, len(rewards), 200)]
     # plt.plot(np.arange(len(rewards)), rewards)
     # plt.show()
