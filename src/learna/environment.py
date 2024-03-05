@@ -1,11 +1,12 @@
+from axial_attention import AxialAttention
 from tensorforce.environments import Environment
 from tensorforce.agents import Agent
 from tensorforce.execution import Runner
 import tensorflow as tf
+import torch
 from RNA import fold
 import numpy as np
 from distance import hamming
-import time
 from dataclasses import dataclass
 
 
@@ -72,6 +73,13 @@ class RnaDesignEnvironment(Environment):
         self._padding_mode = env_config.padding_mode
         self._pad_lower = env_config.pad_lower
         self._rna_seq = None
+        self._attention = AxialAttention(
+            dim=2,
+            dim_index=-1,
+            dim_heads=2,
+            num_dimensions=2,
+            heads=1
+        )
 
     def states(self):
         return dict(type='float', shape=(self._matrix_size, self._matrix_size, 2))
@@ -189,8 +197,12 @@ class RnaDesignEnvironment(Environment):
                 min_index : max_index,
                 :
             ]
+        state = state[np.newaxis, ...]
+        state = torch.tensor(state, dtype=torch.float32)
+        state = self._attention(state)
+        state = state.detach().numpy()
+        state = np.squeeze(state, axis=0)
         return state
-        return self._matrix.reshape(self._matrix_size, self._matrix_size, 2)
 
     def _get_reward(self, terminal):
         """
