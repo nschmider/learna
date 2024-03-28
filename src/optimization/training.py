@@ -99,7 +99,7 @@ def training(env_config, agent_config, network_config, dot_brackets, budget):
             states, terminal, reward = environment.execute(actions=actions)
             agent.observe(terminal=terminal, reward=reward)
         rewards.append(reward)
-    return agent
+    return rewards
 
 
 def get_configs(config):
@@ -152,22 +152,16 @@ def get_configs(config):
 if __name__ == "__main__":
     dot_bracket = "(((((......)))))"
     dot_brackets = [dot_bracket]
-    dot_brackets = filter_data(read_train_data(), 32)
+    dot_brackets = [filter_data(read_train_data(), 32)[0]]
 
-    env_config = RnaDesignEnvironmentConfig(matrix_size=32, reward_exponent=1.0, padding_mode="wrap")
-    agent_config = AgentConfig(learning_rate=1e-4,
-                               batch_size=1,
+    env_config = RnaDesignEnvironmentConfig(reward_exponent=9.34, state_radius=32)#, use_conv=True, use_embedding=True)
+    agent_config = AgentConfig(learning_rate=5.99e-4,
                                likelihood_ratio_clipping=0.3,
-                               entropy_regularization=1.5e-3)
-    network_config = NetworkConfig(conv_sizes=(3, 3),
-                                   conv_channels=(2, 4),
-                                   lstm_units=1,
-                                   num_lstm_layers=1,
-                                   lstm_horizon=12,
-                                   fc_activation="relu",
-                                   fc_layer_units=(50, 20))
+                               entropy_regularization=6.76e-5)
+    network_config = NetworkConfig()
 
-    rewards = training(env_config, agent_config, network_config, dot_brackets, 20000)
-    # rewards = [np.mean(rewards[i:i+100]) for i in range(0, len(rewards), 200)]
-    # plt.plot(np.arange(len(rewards)), rewards)
-    # plt.show()
+    num_episodes = 100000
+    rewards = training(env_config, agent_config, network_config, dot_brackets, num_episodes)
+    rewards = [np.mean(rewards[i:i+100]) for i in range(0, len(rewards), num_episodes // 100)]
+    plt.plot(np.arange(len(rewards)), rewards)
+    plt.show()

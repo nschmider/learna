@@ -18,14 +18,15 @@ class NetworkConfig:
         fc_activation: The activation function.
         fc_layer_units: The list of output units of the dense layers.
     """
-    conv_sizes: Tuple[int] = (7, 9)
-    conv_channels: Tuple[int] = (8, 16)
+    embedding_size: int = 3
+    conv_sizes: Tuple[int] = (17, 5)
+    conv_channels: Tuple[int] = (7, 18)
     num_pooling_layers: int = 1
-    lstm_units: int = 0
-    num_lstm_layers: int = 0
+    lstm_units: int = 28
+    num_lstm_layers: int = 1
     lstm_horizon: int = 12
     fc_activation: str = "relu"
-    fc_layer_units: Tuple[int] = (50, 20)
+    fc_layer_units: Tuple[int] = (57,)
 
 
 def get_network(network_config):
@@ -61,28 +62,52 @@ def get_network(network_config):
     #         l2_regularization=0.0
     #     ))
 
-    layers_before_pool = round(len(network_config.conv_sizes) /
-                          network_config.num_pooling_layers)
 
+
+
+
+    # layers_before_pool = round(len(network_config.conv_sizes) /
+    #                       network_config.num_pooling_layers)
+
+    # convolution = [
+    #     dict(
+    #         type="conv2d",
+    #         size=size,
+    #         window=window,
+    #         stride=1,
+    #         padding="same",
+    #         bias=True,
+    #         activation="relu",
+    #         l2_regularization=0.0
+    #     )
+    #     for size, window in
+    #     zip(
+    #         network_config.conv_channels,
+    #         network_config.conv_sizes
+    #     )
+    # ]
+    
+    # pooling = [dict(type="pool2d", reduction="max")]
+
+    embedding = [
+        dict(
+            type="embedding",
+            size=network_config.embedding_size,
+            num_embeddings=36
+        )
+    ]
     convolution = [
         dict(
-            type="conv2d",
+            type="conv1d",
             size=size,
             window=window,
             stride=1,
             padding="same",
-            bias=True,
-            activation="relu",
-            l2_regularization=0.0
+            activation="relu"
         )
-        for size, window in
-        zip(
-            network_config.conv_channels,
-            network_config.conv_sizes
-        )
+        for size, window in zip(network_config.conv_channels, network_config.conv_sizes)
+        if window > 1
     ]
-    
-    pooling = [dict(type="pool2d", reduction="max")]
 
     flatten = [dict(type="flatten")]
 
@@ -106,10 +131,12 @@ def get_network(network_config):
 
     network = []
     
-    for conv_block in range(network_config.num_pooling_layers):
-        index = conv_block * layers_before_pool
-        network += convolution[index : index + layers_before_pool]
-        network += pooling
+    # for conv_block in range(network_config.num_pooling_layers):
+    #     index = conv_block * layers_before_pool
+    #     network += convolution[index : index + layers_before_pool]
+    #     network += pooling
+    network += embedding
+    network += convolution
     network += flatten
     network += lstm * network_config.num_lstm_layers
     network += dense
@@ -129,7 +156,7 @@ class AgentConfig:
         entropy_regularization: Entropy regularization weight.
     """
     learning_rate: float = 5e-4
-    batch_size: int = 8
+    batch_size: int = 126
     likelihood_ratio_clipping: float = 0.3
     entropy_regularization: float = 1.5e-3
 
@@ -150,7 +177,7 @@ def ppo_agent_kwargs(agent_config):
         learning_rate=agent_config.learning_rate,
         likelihood_ratio_clipping=agent_config.likelihood_ratio_clipping,
         entropy_regularization=agent_config.entropy_regularization,
-        max_episode_timesteps=501
+        max_episode_timesteps=500
     )
 
 
