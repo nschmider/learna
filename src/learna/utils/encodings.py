@@ -116,11 +116,18 @@ def encode_dot_bracket(dot_bracket, rna_seq, state_radius):
 def encode_pairing_without_N(target):
         pairing_encoding = [None] * len(target)
         stack = []
+        pseudo_knots = []
         for index, symbol in enumerate(target, 0):
             if symbol == "(":
                 stack.append(index)
+            elif symbol == "[":
+                pseudo_knots.append(index)
             elif symbol == ")":
                 paired_site = stack.pop()
+                pairing_encoding[paired_site] = index
+                pairing_encoding[index] = paired_site
+            elif symbol == "]" and pseudo_knots:
+                paired_site = pseudo_knots.pop()
                 pairing_encoding[paired_site] = index
                 pairing_encoding[index] = paired_site
         return pairing_encoding
@@ -138,8 +145,8 @@ def encode_pairing(target):
             paired_site = stack.pop()
             pairing_encoding[paired_site] = index
             pairing_encoding[index] = paired_site
-        elif symbol == "]" and stack:
-            paired_site = stack.pop()
+        elif symbol == "]" and pseudo_knots:
+            paired_site = pseudo_knots.pop()
             pairing_encoding[paired_site] = index
             pairing_encoding[index] = paired_site
         elif symbol == "N":
@@ -219,7 +226,6 @@ def probabilistic_pairing(target):
     
     # replace the remaining Ns
     target = target.replace("N", ".")
-    print(target)
 
     # now we have a valid target and call the method without N
     return encode_pairing_without_N(target)
