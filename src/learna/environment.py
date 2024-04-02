@@ -294,14 +294,13 @@ class RnaDesignEnvironment(Environment):
             return 0
 
         pred_fold = fold(self._rna_seq)[0]
-        hamming_distance = custom_hamming(self._input_seq, self._target, pred_fold)
+        hamming_distance = custom_hamming(self._target, pred_fold)
         # hamming_distance = hamming(pred_fold, self._target)
 
         if 0 < hamming_distance < 5:
             hamming_distance = self._local_improvement(pred_fold)
 
-        num_n = sum([target_site == "N" for target_site in self._input_seq])
-        hamming_distance = num_n if num_n == 0 else hamming_distance / num_n
+        hamming_distance /= len(self._input_seq)
         reward = (1 - hamming_distance) ** self._reward_exponent
         # print()
         # print(f"RNA sequence: {self._rna_seq}")
@@ -312,4 +311,4 @@ class RnaDesignEnvironment(Environment):
 
 # random assignment
 # pseudoknots (andere Klammern)
-# reward nicht nur bei n
+# reward nicht nur bei n fertig

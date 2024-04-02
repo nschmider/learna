@@ -75,10 +75,9 @@ def replace_x(sequence, min_length, max_length):
         new_seq += char
     return new_seq
 
-def custom_hamming(input_seq, target_design, folded_mutation):
+def custom_hamming(target_design, folded_mutation):
     return sum(
         [
-            input_seq == "N" and
             not (folded == target or
             folded in ['(', ')'] and target == '|')
             for i, (folded, target) in
