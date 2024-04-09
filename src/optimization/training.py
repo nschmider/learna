@@ -99,7 +99,7 @@ def training(env_config, agent_config, network_config, dot_brackets, budget):
             states, terminal, reward = environment.execute(actions=actions)
             agent.observe(terminal=terminal, reward=reward)
         rewards.append(reward)
-    return rewards
+    return agent
 
 
 def get_configs(config):
