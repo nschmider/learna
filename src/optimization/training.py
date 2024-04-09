@@ -160,7 +160,7 @@ if __name__ == "__main__":
                                entropy_regularization=6.76e-5)
     network_config = NetworkConfig()
 
-    num_episodes = 100000
+    num_episodes = 10000
     rewards = training(env_config, agent_config, network_config, dot_brackets, num_episodes)
     rewards = [np.mean(rewards[i:i+100]) for i in range(0, len(rewards), num_episodes // 100)]
     plt.plot(np.arange(len(rewards)), rewards)

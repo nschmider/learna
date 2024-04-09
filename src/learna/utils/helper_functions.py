@@ -42,7 +42,7 @@ def mask(input_seq):
         The masked sequence.
     """
     output = ""
-    masking_prob = 0.2
+    masking_prob = 0.1
     rand = np.random.binomial(n=1, p=masking_prob, size=len(input_seq))
     for i in range(len(input_seq)):
         if rand[i]:
@@ -52,10 +52,36 @@ def mask(input_seq):
     return output
 
 def replace_x(sequence, min_length, max_length):
+    """
+    Replaces all X in the input string by N such that
+    the amount of Ns in the final string is
+    between min_length and max_length.
+
+    The goal is to sample random numbers that will be the number of Ns.
+    I will approximate the uniformly distributed random variables
+    by normally distributed random variables with
+    mean (max_length + min_length) / (2 * num_xs), which means that the
+    expectancy of the sum is exactly in the middle of the interval and
+    standard deviation 1/6 * (max_length - min_length) / sqrt(num_xs),
+    the goal of which is to have 99.8% of the random variables
+    in the interval to not have to resample a lot.
+    This is achieved by setting 3*stddev = (max_length - min_length) / 2
+    <=> stddev = (max_length - min_length) / 6
+    and as the variance of num_xs random variables is sqrt(num_xs) times
+    the variance of one random variable, we have to divide by sqrt(num_xs).
+
+    Args:
+        sequence (string): The input sequence with Xs
+        min_length (int): The minimum amount of Ns to replace the Xs by
+        max_length (int): The maximum amount of Ns to replace the Xs by
+
+    Returns:
+        string: The modified sequence without X
+    """
     num_xs = sequence.count("X")
     mean = (max_length + min_length) / (2 * num_xs)
     # chosen such that in 99.8% of cases, the sum will lie in the interval
-    std_dev = 1/3 * (max_length - min_length) / np.sqrt(num_xs)
+    std_dev = 1/6 * (max_length - min_length) / np.sqrt(num_xs)
     new_seq = ""
     
     while True:
@@ -75,12 +101,22 @@ def replace_x(sequence, min_length, max_length):
         new_seq += char
     return new_seq
 
-def custom_hamming(target_design, folded_mutation):
+def custom_hamming(target_design, folded):
+    """Computes the hamming distance and allows for | (closing or opening brackets).
+
+    Args:
+        target_design (string): The target
+        folded (string): The predicted design
+
+    Returns:
+        int: The hamming distance
+    """
     return sum(
         [
-            not (folded == target or
-            folded in ['(', ')'] and target == '|')
-            for i, (folded, target) in
-            enumerate(zip(folded_mutation, target_design))
+            not (folded_site == target_site or
+            folded_site in ['(', ')'] and target_site == '|' or
+            target_site == "N")
+            for i, (folded_site, target_site) in
+            enumerate(zip(folded, target_design))
         ]
     )

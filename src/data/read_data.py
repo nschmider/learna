@@ -10,7 +10,8 @@ def read_eterna():
 
 
 def read_train_data(data_dir=None):
-    file_path = "data/train.fasta"
+    file_path = "data/final_dot_bracket_dataset_test.fasta"
+    # file_path = "data/train.fasta"
     if data_dir is not None:
         file_path = data_dir + "/" + file_path
     dot_brackets = []
@@ -22,7 +23,8 @@ def read_train_data(data_dir=None):
 
 
 def read_test_data(data_dir=None):
-    file_path = "data/test.fasta"
+    file_path = "data/final_dot_bracket_dataset_test.fasta"
+    # file_path = "data/test.fasta"
     if data_dir is not None:
         file_path = data_dir + "/" + file_path
     dot_brackets = []
@@ -34,7 +36,8 @@ def read_test_data(data_dir=None):
 
 
 def read_validation_data(data_dir=None):
-    file_path = "data/valid.fasta"
+    file_path = "data/final_dot_bracket_dataset_test.fasta"
+    # file_path = "data/valid.fasta"
     if data_dir is not None:
         file_path = data_dir + "/" + file_path
     dot_brackets = []

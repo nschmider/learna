@@ -11,7 +11,7 @@ import numpy as np
 from distance import hamming
 from dataclasses import dataclass
 
-from src.learna.utils.encodings import encode_dot_bracket, encode_pairing
+from src.learna.utils.encodings import encode_dot_bracket, encode_pairing, probabilistic_pairing
 from src.learna.utils.helper_functions import custom_hamming, dot_bracket_to_matrix, mask, replace_x
 
 
@@ -112,20 +112,20 @@ class RnaDesignEnvironment(Environment):
         self._target = fold(self._input_seq)[0]
         # self._target = next(self._target_gen)
         # self._rna_seq = "-" * len(self._target)
-        self._rna_seq = self._input_seq.replace("N", "-")
 
         design_channel = dot_bracket_to_matrix(self._target)
         design_channel = np.expand_dims(design_channel, axis=-1)
         gene_channel = np.zeros(design_channel.shape)
         self._matrix = np.concatenate((gene_channel, design_channel), axis=-1)
 
-        self._input_seq = self._input_seq[:3] + "X" + self._input_seq[3:20] + "X" + self._input_seq[20:33] + "X" + self._input_seq[33:]
-        self._input_seq = replace_x(self._input_seq, min_length=10, max_length=20)
+        # self._input_seq = self._input_seq[:3] + "X" + self._input_seq[3:20] + "X" + self._input_seq[20:33] + "X" + self._input_seq[33:]
+        # self._input_seq = replace_x(self._input_seq, min_length=10, max_length=20)
         self._target = mask(self._target)
         self._input_seq = mask(self._input_seq)
+        self._rna_seq = self._input_seq.replace("N", "-")
 
         self._padded_encoding = encode_dot_bracket(self._target, self._input_seq, self._state_radius)
-        self._pairing_encoding = encode_pairing(self._target)
+        self._pairing_encoding = probabilistic_pairing(self._target)
         
         return self._get_state()
 
@@ -175,7 +175,12 @@ class RnaDesignEnvironment(Environment):
         return next_state, terminal, reward
 
     def _first_unassigned_site(self):
-        return self._rna_seq.find("N")
+        """
+        Finds the first unassigned site.
+
+        Returns:
+            int: The first unassigned site.
+        """
         return self._rna_seq.find("-")
 
     def _local_improvement(self, folded_design):
@@ -192,7 +197,7 @@ class RnaDesignEnvironment(Environment):
         for mutation in product('ACGU', repeat=len(differing_sites)):
             mutated_sequence = self._get_mutated(differing_sites, mutation)
             folded_mutation = fold(mutated_sequence)[0]
-            hamming_distance = custom_hamming(self._input_seq, self._target, folded_mutation)
+            hamming_distance = custom_hamming(self._target, folded_mutation)
             min_distance = min(hamming_distance, min_distance)
         return min_distance
 
@@ -213,6 +218,16 @@ class RnaDesignEnvironment(Environment):
         return min_distance
 
     def _get_mutated(self, differing_sites, mutation):
+        """
+        Fills the RNA with mutated sites that differ from the RNA sequence.
+
+        Args:
+            differing_sites (list): The sites that differ from the target.
+            mutation (list): The bases to set.
+
+        Returns:
+            string: The mutated sequence.
+        """
         seq = ""
         mutated_set = 0
         for i in range(len(self._rna_seq)):
@@ -296,17 +311,19 @@ class RnaDesignEnvironment(Environment):
         pred_fold = fold(self._rna_seq)[0]
         hamming_distance = custom_hamming(self._target, pred_fold)
         # hamming_distance = hamming(pred_fold, self._target)
+        print(hamming_distance)
 
         if 0 < hamming_distance < 5:
             hamming_distance = self._local_improvement(pred_fold)
 
-        hamming_distance /= len(self._input_seq)
-        reward = (1 - hamming_distance) ** self._reward_exponent
-        # print()
-        # print(f"RNA sequence: {self._rna_seq}")
-        # print(f"Prediction: {pred_fold}")
-        # print(f"Target: {self._target}")
-        # print(f"Reward: {reward}")
+        print(hamming_distance)
+        hamming_distance /= sum([site != "N" for site in self._target])
+        reward = (1 - hamming_distance) #** self._reward_exponent
+        print()
+        print(f"RNA sequence: {self._rna_seq}")
+        print(f"Prediction: {pred_fold}")
+        print(f"Target: {self._target}")
+        print(f"Reward: {reward}")
         return reward
 
 # random assignment
