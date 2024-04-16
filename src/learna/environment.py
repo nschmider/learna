@@ -1,4 +1,4 @@
-from itertools import product
+from itertools import combinations, permutations, product
 
 from axial_attention import AxialAttention
 from tensorforce.environments import Environment
@@ -80,6 +80,7 @@ class RnaDesignEnvironment(Environment):
         self._padding_mode = env_config.padding_mode
         self._pad_lower = env_config.pad_lower
         self._rna_seq = None
+        self._pairs = None
         self._attention = AxialAttention(
             dim=2,
             dim_index=-1,
@@ -109,9 +110,9 @@ class RnaDesignEnvironment(Environment):
         """
         self._current_site = 0
         self._input_seq = "".join(np.random.choice(["A", "C", "G", "U"], size=50))
-        self._target = fold(self._input_seq)[0]
-        # self._target = next(self._target_gen)
-        # self._rna_seq = "-" * len(self._target)
+        # self._target = fold(self._input_seq)[0]
+        self._target = next(self._target_gen)
+        self._rna_seq = "-" * len(self._target)
 
         design_channel = dot_bracket_to_matrix(self._target)
         design_channel = np.expand_dims(design_channel, axis=-1)
@@ -122,10 +123,11 @@ class RnaDesignEnvironment(Environment):
         # self._input_seq = replace_x(self._input_seq, min_length=10, max_length=20)
         self._target = mask(self._target)
         self._input_seq = mask(self._input_seq)
-        self._rna_seq = self._input_seq.replace("N", "-")
+        # self._rna_seq = self._input_seq.replace("N", "-")
 
         self._padded_encoding = encode_dot_bracket(self._target, self._input_seq, self._state_radius)
-        self._pairing_encoding = probabilistic_pairing(self._target)
+        # self._pairing_encoding = encode_pairing(self._target)
+        self._pairing_encoding, self._pairs = probabilistic_pairing(self._target)
         
         return self._get_state()
 
@@ -193,12 +195,39 @@ class RnaDesignEnvironment(Environment):
         min_distance = float('inf')
         differing_sites = [i for i in range(len(self._target))
                            if self._target[i] != folded_design[i]
-                           and self._input_seq[i] == "N"]
+                           and self._target[i] != "N"]
         for mutation in product('ACGU', repeat=len(differing_sites)):
             mutated_sequence = self._get_mutated(differing_sites, mutation)
             folded_mutation = fold(mutated_sequence)[0]
             hamming_distance = custom_hamming(self._target, folded_mutation)
             min_distance = min(hamming_distance, min_distance)
+        return min_distance
+
+    def _local_improvement_pairs(self, folded_design):
+        # differing_sites = [i for i in range(len(self._target))
+        #                    if self._input_seq[i] == "N"
+        #                    and self._target[i] == "N"]
+        # bases = [self._rna_seq[i] for i in differing_sites]
+        # if len(differing_sites) >= 40 or len(differing_sites) == 0:
+        #     return
+        # min_distance = float('inf')
+        # for mutation in permutations(bases):
+        #     mutated_sequence = self._get_mutated(differing_sites, mutation)
+        #     folded_mutation = fold(mutated_sequence)[0]
+        #     hamming_distance = custom_hamming(self._target, folded_mutation)
+        #     min_distance = min(hamming_distance, min_distance)
+        if len(self._pairs) >= 10 or len(self._pairs) == 0:
+            return
+        best_mutated = self._rna_seq
+        for chosen_indices, pair_candidates in self._pairs:
+            min_distance = float('inf')
+            for changed_indices in permutations(pair_candidates, len(chosen_indices)):
+                mutated_sequence = self._switch(best_mutated, chosen_indices, changed_indices)
+                folded_mutation = fold(mutated_sequence)[0]
+                hamming_distance = custom_hamming(self._target, folded_mutation)
+                if hamming_distance < min_distance:
+                    best_mutated = mutated_sequence
+                    min_distance = hamming_distance
         return min_distance
 
     def _local_improvement_without_unknowns(self, folded_design):
@@ -237,6 +266,15 @@ class RnaDesignEnvironment(Environment):
                 continue
             seq += self._rna_seq[i]
         return seq
+
+    def _switch(self, seq, indices1, indices2):
+        rna_seq_list = list(seq)
+        for index1, index2 in zip(indices1, indices2):
+            tmp = rna_seq_list[index1]
+            rna_seq_list[index1] = rna_seq_list[index2]
+            rna_seq_list[index2] = tmp
+            rna_seq_list = "".join(rna_seq_list)
+        return rna_seq_list
 
     def _get_state(self):
         """
@@ -313,8 +351,12 @@ class RnaDesignEnvironment(Environment):
         # hamming_distance = hamming(pred_fold, self._target)
         print(hamming_distance)
 
-        if 0 < hamming_distance < 5:
-            hamming_distance = self._local_improvement(pred_fold)
+        # if 0 < hamming_distance < 5:
+        #     hamming_distance = self._local_improvement(pred_fold)
+        # else:
+        changed_distance = self._local_improvement_pairs(pred_fold)
+        if changed_distance is not None:
+            hamming_distance = changed_distance
 
         print(hamming_distance)
         hamming_distance /= sum([site != "N" for site in self._target])
@@ -325,7 +367,3 @@ class RnaDesignEnvironment(Environment):
         print(f"Target: {self._target}")
         print(f"Reward: {reward}")
         return reward
-
-# random assignment
-# pseudoknots (andere Klammern)
-# reward nicht nur bei n fertig

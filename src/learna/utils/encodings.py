@@ -212,6 +212,7 @@ def probabilistic_pairing(target):
     closing_square_brackets_after_i = []
     n_until_i = []
     n_after_i = []
+    pairs = []
 
     # # check how you can replace a |
     # count_opening = 0
@@ -324,6 +325,7 @@ def probabilistic_pairing(target):
                               indices_set -
                               square_indices_set)
             n_chosen = random.sample(possible_n, to_close)
+            pairs.append((n_chosen, possible_n))
             list_target = list(target)
             for i in n_chosen:
                 list_target[i] = ")"
@@ -383,6 +385,7 @@ def probabilistic_pairing(target):
                               indices_set -
                               square_indices_set)
             n_chosen = random.sample(possible_n, to_open)
+            pairs.append((n_chosen, possible_n))
             list_target = list(target)
             for i in n_chosen:
                 list_target[i] = "("
@@ -403,4 +406,4 @@ def probabilistic_pairing(target):
     target = target.replace("N", ".")
 
     # now we have a valid target and call the method without N
-    return encode_pairing_without_N(target)
+    return encode_pairing_without_N(target), pairs
