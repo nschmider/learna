@@ -1,6 +1,6 @@
 from itertools import combinations, permutations, product
 
-from axial_attention import AxialAttention
+# from axial_attention import AxialAttention
 from tensorforce.environments import Environment
 from tensorforce.agents import Agent
 from tensorforce.execution import Runner
@@ -81,13 +81,13 @@ class RnaDesignEnvironment(Environment):
         self._pad_lower = env_config.pad_lower
         self._rna_seq = None
         self._pairs = None
-        self._attention = AxialAttention(
-            dim=2,
-            dim_index=-1,
-            dim_heads=2,
-            num_dimensions=2,
-            heads=1
-        )
+        # self._attention = AxialAttention(
+        #     dim=2,
+        #     dim_index=-1,
+        #     dim_heads=2,
+        #     num_dimensions=2,
+        #     heads=1
+        # )
         self._state_radius = env_config.state_radius
         self._padded_encoding = None
 
@@ -125,11 +125,11 @@ class RnaDesignEnvironment(Environment):
         self._input_seq = mask(self._input_seq)
         # self._rna_seq = self._input_seq.replace("N", "-")
 
-        self._padded_encoding = encode_dot_bracket(self._target, self._input_seq, self._state_radius)
+        self._padded_encoding = encode_dot_bracket(self._target, None, self._state_radius)
         # self._pairing_encoding = encode_pairing(self._target)
         self._pairing_encoding, self._pairs = probabilistic_pairing(self._target)
-        
-        return self._get_state()
+        state = self._get_state()
+        return state
 
     def execute(self, actions):
         """
@@ -216,7 +216,7 @@ class RnaDesignEnvironment(Environment):
         #     folded_mutation = fold(mutated_sequence)[0]
         #     hamming_distance = custom_hamming(self._target, folded_mutation)
         #     min_distance = min(hamming_distance, min_distance)
-        if len(self._pairs) >= 10 or len(self._pairs) == 0:
+        if len(self._pairs) >= 5 or len(self._pairs) == 0:
             return
         best_mutated = self._rna_seq
         for chosen_indices, pair_candidates in self._pairs:
@@ -328,7 +328,7 @@ class RnaDesignEnvironment(Environment):
             ]
         state = state[np.newaxis, ...]
         state = torch.tensor(state, dtype=torch.float32)
-        state = self._attention(state)
+        # state = self._attention(state)
         state = state.detach().numpy()
         state = np.squeeze(state, axis=0)
         return state
@@ -354,9 +354,9 @@ class RnaDesignEnvironment(Environment):
         # if 0 < hamming_distance < 5:
         #     hamming_distance = self._local_improvement(pred_fold)
         # else:
-        changed_distance = self._local_improvement_pairs(pred_fold)
-        if changed_distance is not None:
-            hamming_distance = changed_distance
+        # changed_distance = self._local_improvement_pairs(pred_fold)
+        # if changed_distance is not None:
+        #     hamming_distance = changed_distance
 
         print(hamming_distance)
         hamming_distance /= sum([site != "N" for site in self._target])

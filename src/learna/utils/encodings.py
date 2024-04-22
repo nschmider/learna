@@ -126,7 +126,7 @@ def encode_dot_bracket(dot_bracket, rna_seq, state_radius):
     padding = "=" * state_radius
     dot_bracket = padding + dot_bracket + padding
     if rna_seq is None:
-        return [design_to_int[site] for site in dot_bracket]
+        return [design_to_int_test[site] for site in dot_bracket]
     rna_seq = padding + rna_seq + padding
     if "|" in rna_seq:
         return [single_bracket_to_int[site] for site in zip(rna_seq, dot_bracket)]
