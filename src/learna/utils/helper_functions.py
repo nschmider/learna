@@ -42,7 +42,7 @@ def mask(input_seq):
         The masked sequence.
     """
     output = ""
-    masking_prob = 0.1
+    masking_prob = 0
     rand = np.random.binomial(n=1, p=masking_prob, size=len(input_seq))
     for i in range(len(input_seq)):
         if rand[i]:

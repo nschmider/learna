@@ -351,8 +351,8 @@ class RnaDesignEnvironment(Environment):
         # hamming_distance = hamming(pred_fold, self._target)
         print(hamming_distance)
 
-        # if 0 < hamming_distance < 5:
-        #     hamming_distance = self._local_improvement(pred_fold)
+        if 0 < hamming_distance < 5:
+            hamming_distance = self._local_improvement(pred_fold)
         # else:
         # changed_distance = self._local_improvement_pairs(pred_fold)
         # if changed_distance is not None:

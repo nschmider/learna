@@ -151,7 +151,7 @@ def get_configs(config):
 if __name__ == "__main__":
     # dot_bracket = "(((((......)))))"
     # dot_brackets = [dot_bracket]
-    dot_brackets = filter_data(read_train_data(), 50)
+    dot_brackets = filter_data(read_train_data(), 32)
 
     env_config = RnaDesignEnvironmentConfig(reward_exponent=9.34, state_radius=32)#, use_conv=True, use_embedding=True)
     agent_config = AgentConfig(learning_rate=5.99e-4,
@@ -159,7 +159,7 @@ if __name__ == "__main__":
                                entropy_regularization=6.76e-5)
     network_config = NetworkConfig()
 
-    num_episodes = 1000
+    num_episodes = 10000
     rewards = training(env_config, agent_config, network_config, dot_brackets, num_episodes)
     rewards = [np.mean(rewards[i:i+100]) for i in range(0, len(rewards), num_episodes // 100)]
     plt.plot(np.arange(len(rewards)), rewards)
