@@ -1,6 +1,8 @@
 import numpy as np
 from matplotlib import pyplot as plt
+import pickle
 from tqdm import tqdm
+from tensorforce.execution import Runner
 
 from src.data.read_data import read_train_data, filter_data
 from src.learna.environment import RnaDesignEnvironment, RnaDesignEnvironmentConfig
@@ -61,7 +63,7 @@ def evaluate(env_config, agent, dot_brackets, tries):
 
         while not terminal:
             # Episode timestep
-            actions = agent.act(states=states)
+            actions = agent.act(states=states, deterministic=False)
             states, terminal, reward = environment.execute(actions=actions)
             agent.observe(terminal=terminal, reward=reward)
         bracket = i % data_len
@@ -88,6 +90,12 @@ def training(env_config, agent_config, network_config, dot_brackets, budget):
     agent = get_agent(environment, agent_config, network_config)
     rewards = []
 
+    runner = Runner(
+        agent=agent,
+        environment=environment,
+        max_episode_timesteps=500
+    )
+
     for _ in tqdm(range(budget)):
         # Initialize episode
         states = environment.reset()
@@ -96,8 +104,10 @@ def training(env_config, agent_config, network_config, dot_brackets, budget):
             # Episode timestep
             actions = agent.act(states=states)
             states, terminal, reward = environment.execute(actions=actions)
+            reward = reward ** 1/9.34
             agent.observe(terminal=terminal, reward=reward)
         rewards.append(reward)
+
     return rewards
 
 
@@ -151,7 +161,7 @@ def get_configs(config):
 if __name__ == "__main__":
     # dot_bracket = "(((((......)))))"
     # dot_brackets = [dot_bracket]
-    dot_brackets = filter_data(read_train_data(), 32)
+    dot_brackets = read_train_data()
 
     env_config = RnaDesignEnvironmentConfig(reward_exponent=9.34, state_radius=32)#, use_conv=True, use_embedding=True)
     agent_config = AgentConfig(learning_rate=5.99e-4,
@@ -159,8 +169,11 @@ if __name__ == "__main__":
                                entropy_regularization=6.76e-5)
     network_config = NetworkConfig()
 
-    num_episodes = 10000
+    num_episodes = 37800
+    
     rewards = training(env_config, agent_config, network_config, dot_brackets, num_episodes)
+    with open('list.pkl', 'wb') as file:
+        pickle.dump(rewards, file)
     rewards = [np.mean(rewards[i:i+100]) for i in range(0, len(rewards), num_episodes // 100)]
     plt.plot(np.arange(len(rewards)), rewards)
     plt.show()

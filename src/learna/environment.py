@@ -90,6 +90,7 @@ class RnaDesignEnvironment(Environment):
         # )
         self._state_radius = env_config.state_radius
         self._padded_encoding = None
+        self._iter = 100
 
     def states(self):
         return dict(type='int', shape=(2 * self._state_radius + 1,))
@@ -108,27 +109,37 @@ class RnaDesignEnvironment(Environment):
         Returns:
             The first state.
         """
+        print("RESET")
+        print("RESET")
+        print(self._iter)
+        print("RESET")
+        print("RESET")
+        self._iter += 1
         self._current_site = 0
-        self._input_seq = "".join(np.random.choice(["A", "C", "G", "U"], size=50))
+        # self._input_seq = "".join(np.random.choice(["A", "C", "G", "U"], size=50))
         # self._target = fold(self._input_seq)[0]
-        self._target = next(self._target_gen)
+        if self._iter > 100:
+            self._target = next(self._target_gen)
+            print(len(self._target))
+            self._iter = 0
         self._rna_seq = "-" * len(self._target)
 
-        design_channel = dot_bracket_to_matrix(self._target)
-        design_channel = np.expand_dims(design_channel, axis=-1)
-        gene_channel = np.zeros(design_channel.shape)
-        self._matrix = np.concatenate((gene_channel, design_channel), axis=-1)
+        # design_channel = dot_bracket_to_matrix(self._target)
+        # design_channel = np.expand_dims(design_channel, axis=-1)
+        # gene_channel = np.zeros(design_channel.shape)
+        # self._matrix = np.concatenate((gene_channel, design_channel), axis=-1)
 
         # self._input_seq = self._input_seq[:3] + "X" + self._input_seq[3:20] + "X" + self._input_seq[20:33] + "X" + self._input_seq[33:]
         # self._input_seq = replace_x(self._input_seq, min_length=10, max_length=20)
-        self._target = mask(self._target)
-        self._input_seq = mask(self._input_seq)
+        # self._target = mask(self._target)
+        # self._input_seq = mask(self._input_seq)
         # self._rna_seq = self._input_seq.replace("N", "-")
 
         self._padded_encoding = encode_dot_bracket(self._target, None, self._state_radius)
-        # self._pairing_encoding = encode_pairing(self._target)
-        self._pairing_encoding, self._pairs = probabilistic_pairing(self._target)
+        self._pairing_encoding = encode_pairing(self._target)
+        # self._pairing_encoding, self._pairs = probabilistic_pairing(self._target)
         state = self._get_state()
+        print(len(state))
         return state
 
     def execute(self, actions):
@@ -156,11 +167,11 @@ class RnaDesignEnvironment(Environment):
                 pair_base +
                 self._rna_seq[pair_index + 1:]
             )
-            self._matrix[self._current_site, self._current_site, 0] += (actions + 1)
-            self._matrix[pair_index, pair_index, 0] += (4 - actions)
+            # self._matrix[self._current_site, self._current_site, 0] += (actions + 1)
+            # self._matrix[pair_index, pair_index, 0] += (4 - actions)
         else:
             # First matrix channel contains the actions taken
-            self._matrix[self._current_site, self._current_site, 0] += (actions + 1)
+            # self._matrix[self._current_site, self._current_site, 0] += (actions + 1)
             self._rna_seq = (
                 self._rna_seq[:self._current_site] +
                 self.action_to_base[actions] +
@@ -347,20 +358,21 @@ class RnaDesignEnvironment(Environment):
             return 0
 
         pred_fold = fold(self._rna_seq)[0]
-        hamming_distance = custom_hamming(self._target, pred_fold)
-        # hamming_distance = hamming(pred_fold, self._target)
+        # hamming_distance = custom_hamming(self._target, pred_fold)
+        hamming_distance = hamming(pred_fold, self._target)
         print(hamming_distance)
 
         if 0 < hamming_distance < 5:
-            hamming_distance = self._local_improvement(pred_fold)
+            hamming_distance = self._local_improvement_without_unknowns(pred_fold)
         # else:
         # changed_distance = self._local_improvement_pairs(pred_fold)
         # if changed_distance is not None:
         #     hamming_distance = changed_distance
 
         print(hamming_distance)
-        hamming_distance /= sum([site != "N" for site in self._target])
-        reward = (1 - hamming_distance) #** self._reward_exponent
+        hamming_distance /= len(self._target)
+        # hamming_distance /= sum([site != "N" for site in self._target])
+        reward = (1 - hamming_distance) ** self._reward_exponent
         print()
         print(f"RNA sequence: {self._rna_seq}")
         print(f"Prediction: {pred_fold}")

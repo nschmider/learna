@@ -61,13 +61,13 @@ def _encode_dot_bracket(secondary, env_config):
     padding = "=" * env_config.state_radius
     padded_secondary = padding + secondary + padding
 
-    if env_config.use_embedding:
+    if True:#env_config.use_embedding:
         site_encoding = {".": 0, "(": 1, ")": 2, "=": 3}
     else:
         site_encoding = {".": 0, "(": 1, ")": 1, "=": 0}
 
     # Sites corresponds to 1 pixel with 1 channel if convs are applied directly
-    if env_config.use_conv and not env_config.use_embedding:
+    if env_config.use_conv and not True:#env_config.use_embedding:
         return [[site_encoding[site]] for site in padded_secondary]
     return [site_encoding[site] for site in padded_secondary]
 

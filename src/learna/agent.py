@@ -24,7 +24,7 @@ class NetworkConfig:
     num_pooling_layers: int = 1
     lstm_units: int = 28
     num_lstm_layers: int = 1
-    lstm_horizon: int = 12
+    lstm_horizon: int = 5
     fc_activation: str = "relu"
     fc_layer_units: Tuple[int] = (57,)
 
@@ -93,7 +93,7 @@ def get_network(network_config):
         dict(
             type="embedding",
             size=network_config.embedding_size,
-            num_embeddings=5
+            num_embeddings=4
         )
     ]
     convolution = [
@@ -102,7 +102,7 @@ def get_network(network_config):
             size=size,
             window=window,
             stride=1,
-            padding="same",
+            padding="valid",
             activation="relu"
         )
         for size, window in zip(network_config.conv_channels, network_config.conv_sizes)
@@ -155,10 +155,10 @@ class AgentConfig:
         likelihood_ratio_clipping: Likelihood ratio clipping for policy gradient.
         entropy_regularization: Entropy regularization weight.
     """
-    learning_rate: float = 5e-4
+    learning_rate: float = 5.99e-4
     batch_size: int = 126
     likelihood_ratio_clipping: float = 0.3
-    entropy_regularization: float = 1.5e-3
+    entropy_regularization: float = 6.76e-5
 
 
 def ppo_agent_kwargs(agent_config):
