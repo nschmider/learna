@@ -1,3 +1,15 @@
+def read_eterna(file, data_dir=None):
+    file_path = file
+    if data_dir is not None:
+        file_path = data_dir + "/" + file_path
+    dot_brackets = []
+    with open(file_path, "r") as file:
+        for line in file:
+            if not line.startswith(">"):
+                dot_brackets.append(line.strip())
+    return dot_brackets
+
+
 def read_eterna(data_dir=None):
     file_path = "data/eterna100_vienna2.fasta"
     if data_dir is not None:

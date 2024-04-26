@@ -6,7 +6,7 @@ from matplotlib import pyplot as plt
 from tqdm import tqdm
 from tensorforce.execution import Runner
 
-from src.data.read_data import read_train_data, filter_data
+from src.data.read_data import read_train_data, filter_data, read_file
 from src.learna.environment import RnaDesignEnvironment, RnaDesignEnvironmentConfig
 from src.learna.agent import AgentConfig, ppo_agent_kwargs, get_agent, NetworkConfig, get_network
 
@@ -163,11 +163,16 @@ def get_configs(config):
 if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument("--result_dir")
+    parser.add_argument("--input_file")
     args = parser.parse_args()
 
     # dot_bracket = "(((((......)))))"
     # dot_brackets = [dot_bracket]
-    dot_brackets = read_train_data()
+    # dot_brackets = read_train_data()
+    if args.input_file is None:
+        dot_brackets = read_train_data()
+    else:
+        dot_brackets = read_file(args.input_file)
 
     env_config = RnaDesignEnvironmentConfig(reward_exponent=9.34, state_radius=32)#, use_conv=True, use_embedding=True)
     agent_config = AgentConfig(learning_rate=5.99e-4,
@@ -175,7 +180,7 @@ if __name__ == "__main__":
                                entropy_regularization=6.76e-5)
     network_config = NetworkConfig()
 
-    num_episodes = 37800
+    num_episodes = 1000
     
     rewards = training(env_config, agent_config, network_config, dot_brackets, num_episodes)
     pkl_file = args.result_dir
