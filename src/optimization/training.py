@@ -106,7 +106,7 @@ def training(env_config, agent_config, network_config, dot_brackets, budget):
             # Episode timestep
             actions = agent.act(states=states)
             states, terminal, reward = environment.execute(actions=actions)
-            reward = reward ** 1/9.34
+            reward = reward ** (1/9.34)
             agent.observe(terminal=terminal, reward=reward)
         rewards.append(reward)
 
