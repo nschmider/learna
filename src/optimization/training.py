@@ -1,6 +1,8 @@
+from argparse import ArgumentParser
+import pickle
+
 import numpy as np
 from matplotlib import pyplot as plt
-import pickle
 from tqdm import tqdm
 from tensorforce.execution import Runner
 
@@ -159,6 +161,10 @@ def get_configs(config):
 
 
 if __name__ == "__main__":
+    parser = ArgumentParser()
+    parser.add_argument("--result_dir")
+    args = parser.parse_args()
+
     # dot_bracket = "(((((......)))))"
     # dot_brackets = [dot_bracket]
     dot_brackets = read_train_data()
@@ -172,7 +178,10 @@ if __name__ == "__main__":
     num_episodes = 37800
     
     rewards = training(env_config, agent_config, network_config, dot_brackets, num_episodes)
-    with open('list.pkl', 'wb') as file:
+    pkl_file = args.result_dir
+    if pkl_file is None:
+        pkl_file = 'list.pkl'
+    with open(pkl_file, 'wb') as file:
         pickle.dump(rewards, file)
     rewards = [np.mean(rewards[i:i+100]) for i in range(0, len(rewards), num_episodes // 100)]
     plt.plot(np.arange(len(rewards)), rewards)

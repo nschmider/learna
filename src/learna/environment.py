@@ -90,7 +90,7 @@ class RnaDesignEnvironment(Environment):
         # )
         self._state_radius = env_config.state_radius
         self._padded_encoding = None
-        self._iter = 100
+        self._iter = 999
 
     def states(self):
         return dict(type='int', shape=(2 * self._state_radius + 1,))
@@ -118,7 +118,7 @@ class RnaDesignEnvironment(Environment):
         self._current_site = 0
         # self._input_seq = "".join(np.random.choice(["A", "C", "G", "U"], size=50))
         # self._target = fold(self._input_seq)[0]
-        if self._iter > 100:
+        if self._iter >= 1000:
             self._target = next(self._target_gen)
             print(len(self._target))
             self._iter = 0
