@@ -1,4 +1,4 @@
-def read_eterna(file, data_dir=None):
+def read_file(file, data_dir=None):
     file_path = file
     if data_dir is not None:
         file_path = data_dir + "/" + file_path
