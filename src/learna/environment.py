@@ -90,7 +90,7 @@ class RnaDesignEnvironment(Environment):
         # )
         self._state_radius = env_config.state_radius
         self._padded_encoding = None
-        self._iter = 999
+        self._iter = 9999
 
     def states(self):
         return dict(type='int', shape=(2 * self._state_radius + 1,))
@@ -118,7 +118,7 @@ class RnaDesignEnvironment(Environment):
         self._current_site = 0
         # self._input_seq = "".join(np.random.choice(["A", "C", "G", "U"], size=50))
         # self._target = fold(self._input_seq)[0]
-        if self._iter >= 1000:
+        if self._iter >= 10000:
             self._target = next(self._target_gen)
             print(len(self._target))
             self._iter = 0
@@ -136,7 +136,7 @@ class RnaDesignEnvironment(Environment):
         # self._rna_seq = self._input_seq.replace("N", "-")
 
         self._padded_encoding = encode_dot_bracket(self._target, None, self._state_radius)
-        self._pairing_encoding = encode_pairing(self._target)
+        self._pairing_encoding = [None] * len(self._target)#encode_pairing(self._target)
         # self._pairing_encoding, self._pairs = probabilistic_pairing(self._target)
         state = self._get_state()
         print(len(state))
