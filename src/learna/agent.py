@@ -93,7 +93,7 @@ def get_network(network_config):
         dict(
             type="embedding",
             size=network_config.embedding_size,
-            num_embeddings=4
+            num_embeddings=5
         )
     ]
     convolution = [
@@ -102,7 +102,7 @@ def get_network(network_config):
             size=size,
             window=window,
             stride=1,
-            padding="valid",
+            padding="same",
             activation="relu"
         )
         for size, window in zip(network_config.conv_channels, network_config.conv_sizes)

@@ -42,6 +42,7 @@ class RnaDesignEnvironmentConfig:
     pad_lower: bool = False
     reward_exponent: float = 1.0
     state_radius: int = 32
+    masked: bool = True
 
 
 class RnaDesignEnvironment(Environment):
@@ -91,6 +92,8 @@ class RnaDesignEnvironment(Environment):
         self._state_radius = env_config.state_radius
         self._padded_encoding = None
         self._iter = 9999
+        self.episode_stats = []
+        self.masked = env_config.masked
 
     def states(self):
         return dict(type='int', shape=(2 * self._state_radius + 1,))
@@ -120,6 +123,7 @@ class RnaDesignEnvironment(Environment):
         # self._target = fold(self._input_seq)[0]
         if self._iter >= 10000:
             self._target = next(self._target_gen)
+            self._target = mask(self._target)
             print(len(self._target))
             self._iter = 0
         self._rna_seq = "-" * len(self._target)
@@ -136,8 +140,8 @@ class RnaDesignEnvironment(Environment):
         # self._rna_seq = self._input_seq.replace("N", "-")
 
         self._padded_encoding = encode_dot_bracket(self._target, None, self._state_radius)
-        self._pairing_encoding = [None] * len(self._target)#encode_pairing(self._target)
-        # self._pairing_encoding, self._pairs = probabilistic_pairing(self._target)
+        # self._pairing_encoding = [None] * len(self._target)#encode_pairing(self._target)
+        self._pairing_encoding, self._pairs = probabilistic_pairing(self._target)
         state = self._get_state()
         print(len(state))
         return state
@@ -211,7 +215,11 @@ class RnaDesignEnvironment(Environment):
             mutated_sequence = self._get_mutated(differing_sites, mutation)
             folded_mutation = fold(mutated_sequence)[0]
             hamming_distance = custom_hamming(self._target, folded_mutation)
-            min_distance = min(hamming_distance, min_distance)
+            if hamming_distance < min_distance:
+                best_pred = mutated_sequence
+                min_distance = hamming_distance
+        if best_pred:
+            self._rna_seq = best_pred
         return min_distance
 
     def _local_improvement_pairs(self, folded_design):
@@ -239,6 +247,8 @@ class RnaDesignEnvironment(Environment):
                 if hamming_distance < min_distance:
                     best_mutated = mutated_sequence
                     min_distance = hamming_distance
+        # if best_mutated:
+        #     self._rna_seq = best_mutated
         return min_distance
 
     def _local_improvement_without_unknowns(self, folded_design):
@@ -254,7 +264,11 @@ class RnaDesignEnvironment(Environment):
             mutated_sequence = self._get_mutated(differing_sites, mutation)
             folded_mutation = fold(mutated_sequence)[0]
             hamming_distance = hamming(folded_mutation, self._target)
-            min_distance = min(hamming_distance, min_distance)
+            if hamming_distance < min_distance:
+                min_distance = hamming_distance
+                best_prediction = folded_mutation
+        if best_prediction:
+            self._rna_seq = best_prediction
         return min_distance
 
     def _get_mutated(self, differing_sites, mutation):
@@ -358,21 +372,24 @@ class RnaDesignEnvironment(Environment):
             return 0
 
         pred_fold = fold(self._rna_seq)[0]
-        # hamming_distance = custom_hamming(self._target, pred_fold)
-        hamming_distance = hamming(pred_fold, self._target)
+        hamming_distance = custom_hamming(self._target, pred_fold)
+        # hamming_distance = hamming(pred_fold, self._target)
         print(hamming_distance)
 
-        if 0 < hamming_distance < 5:
-            hamming_distance = self._local_improvement_without_unknowns(pred_fold)
-        # else:
-        # changed_distance = self._local_improvement_pairs(pred_fold)
-        # if changed_distance is not None:
-        #     hamming_distance = changed_distance
+        if not self.masked:
+            if 0 < hamming_distance < 5:
+                hamming_distance = self._local_improvement_without_unknowns(pred_fold)
+        if self.masked:
+            changed_distance = self._local_improvement_pairs(pred_fold)
+            if changed_distance is not None:
+                hamming_distance = changed_distance
 
         print(hamming_distance)
-        hamming_distance /= len(self._target)
-        # hamming_distance /= sum([site != "N" for site in self._target])
+        # hamming_distance /= len(self._target)
+        hamming_distance /= sum([site != "N" for site in self._target])
+        self.episode_stats.append((1-hamming_distance, self._rna_seq))
         reward = (1 - hamming_distance) ** self._reward_exponent
+        
         print()
         print(f"RNA sequence: {self._rna_seq}")
         print(f"Prediction: {pred_fold}")
