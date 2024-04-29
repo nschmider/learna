@@ -112,11 +112,6 @@ class RnaDesignEnvironment(Environment):
         Returns:
             The first state.
         """
-        print("RESET")
-        print("RESET")
-        print(self._iter)
-        print("RESET")
-        print("RESET")
         self._iter += 1
         self._current_site = 0
         # self._input_seq = "".join(np.random.choice(["A", "C", "G", "U"], size=50))
@@ -124,7 +119,6 @@ class RnaDesignEnvironment(Environment):
         if self._iter >= 10000:
             self._target = next(self._target_gen)
             self._target = mask(self._target)
-            print(len(self._target))
             self._iter = 0
         self._rna_seq = "-" * len(self._target)
 
@@ -143,7 +137,6 @@ class RnaDesignEnvironment(Environment):
         # self._pairing_encoding = [None] * len(self._target)#encode_pairing(self._target)
         self._pairing_encoding, self._pairs = probabilistic_pairing(self._target)
         state = self._get_state()
-        print(len(state))
         return state
 
     def execute(self, actions):
@@ -372,21 +365,19 @@ class RnaDesignEnvironment(Environment):
             return 0
 
         pred_fold = fold(self._rna_seq)[0]
-        hamming_distance = custom_hamming(self._target, pred_fold)
-        # hamming_distance = hamming(pred_fold, self._target)
-        print(hamming_distance)
 
         if not self.masked:
+            hamming_distance = hamming(pred_fold, self._target)
             if 0 < hamming_distance < 5:
                 hamming_distance = self._local_improvement_without_unknowns(pred_fold)
+            hamming_distance /= len(self._target)
         if self.masked:
+            hamming_distance = custom_hamming(self._target, pred_fold)
             changed_distance = self._local_improvement_pairs(pred_fold)
             if changed_distance is not None:
                 hamming_distance = changed_distance
+            hamming_distance /= sum([site != "N" for site in self._target])
 
-        print(hamming_distance)
-        # hamming_distance /= len(self._target)
-        hamming_distance /= sum([site != "N" for site in self._target])
         self.episode_stats.append((1-hamming_distance, self._rna_seq))
         reward = (1 - hamming_distance) ** self._reward_exponent
         
