@@ -51,6 +51,34 @@ def mask(input_seq):
             output += input_seq[i]
     return output
 
+
+def mask_parts(input_seq):
+    """
+    Masks the given sequence randomly with sequences of Ns.
+
+    Args:
+        input_seq: The sequence to mask
+
+    Returns:
+        The masked sequence.
+    """
+    input_seq = list(input_seq)
+    i = 0
+    while i < len(input_seq):
+        insert_seq = np.random.choice([True, False], p=[0.05, 0.95])
+        if not insert_seq:
+            i += 1
+            continue
+        sites_left = len(input_seq) - i
+        print(sites_left)
+        # insert at most 10 Ns
+        max_n_seq_length = min(10, sites_left)
+        ns_to_insert = np.random.choice(np.arange(1, max_n_seq_length + 1))
+        input_seq[i : i + ns_to_insert] = ["N"] * ns_to_insert
+        i += ns_to_insert + 1
+    input_seq = "".join(input_seq)
+    return input_seq
+
 def replace_x(sequence, min_length, max_length):
     """
     Replaces all X in the input string by N such that
