@@ -123,12 +123,6 @@ def training(env_config, agent_config, network_config, dot_brackets, budget):
     agent = get_agent(environment, agent_config, network_config)
     rewards = []
 
-    runner = Runner(
-        agent=agent,
-        environment=environment,
-        max_episode_timesteps=500
-    )
-
     for _ in tqdm(range(budget)):
         # Initialize episode
         states = environment.reset()
@@ -140,7 +134,7 @@ def training(env_config, agent_config, network_config, dot_brackets, budget):
             agent.observe(terminal=terminal, reward=reward)
         rewards.append(reward)
 
-    return environment.episode_stats
+    return environment.episodes_info
 
 
 def get_configs(config):
@@ -198,7 +192,7 @@ if __name__ == "__main__":
     else:
         dot_brackets = read_file(args.input_file)
 
-    env_config = RnaDesignEnvironmentConfig(reward_exponent=9.34, state_radius=32, masked=args.masked)
+    env_config = RnaDesignEnvironmentConfig(reward_exponent=9.34, state_radius=32)#, masked=args.masked)
     agent_config = AgentConfig(learning_rate=5.99e-4,
                                likelihood_ratio_clipping=0.3,
                                entropy_regularization=6.76e-5)
@@ -214,7 +208,8 @@ if __name__ == "__main__":
         pkl_file = 'list.pkl'
     with open(pkl_file, 'wb') as file:
         pickle.dump(rewards, file)
-    rewards = [reward[0] for reward in rewards]
-    rewards = [np.mean(rewards[i:i+100]) for i in range(0, len(rewards), num_episodes // 100)]
+    # rewards = [reward[0] for reward in rewards]
+    rewards = [episode_info.normalized_hamming_distance for episode_info in rewards]
+    # rewards = [np.mean(rewards[i:i+100]) for i in range(0, len(rewards), num_episodes // 100)]
     plt.plot(np.arange(len(rewards)), rewards)
     plt.show()

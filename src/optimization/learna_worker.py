@@ -46,10 +46,11 @@ class LearnaWorker(Worker):
         agent.save(directory=save_path.joinpath("last_model"))
 
         min_distances = 1 - np.max(rewards, 1)
-        normalized_solved_sequences = sum(min_distances == 0) / len(self.validation_sequences)
+        solved_sequences = sum(min_distances == 0)
+        normalized_solved_sequences = solved_sequences / len(self.validation_sequences)
         mean_distance = np.mean(min_distances)
 
-        return {"loss": mean_distance, "info": normalized_solved_sequences}
+        return {"loss": mean_distance, "info": [normalized_solved_sequences, solved_sequences]}
 
     @staticmethod
     def get_configspace():
