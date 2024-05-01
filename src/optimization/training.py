@@ -134,7 +134,7 @@ def training(env_config, agent_config, network_config, dot_brackets, budget):
             agent.observe(terminal=terminal, reward=reward)
         rewards.append(reward)
 
-    return rewards
+    return environment.episode_stats
 
 
 def get_configs(config):
@@ -208,7 +208,7 @@ if __name__ == "__main__":
         pkl_file = 'list.pkl'
     with open(pkl_file, 'wb') as file:
         pickle.dump(rewards, file)
-    # rewards = [reward[0] for reward in rewards]
+    rewards = [reward[0] for reward in rewards]
     # rewards = [episode_info.normalized_hamming_distance for episode_info in rewards]
     # rewards = [np.mean(rewards[i:i+100]) for i in range(0, len(rewards), num_episodes // 100)]
     plt.plot(np.arange(len(rewards)), rewards)
