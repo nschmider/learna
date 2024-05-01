@@ -194,7 +194,7 @@ if __name__ == "__main__":
 
     env_config = RnaDesignEnvironmentConfig(reward_exponent=9.34, state_radius=32)#, masked=args.masked)
     agent_config = AgentConfig(learning_rate=5.99e-4,
-                               likelihood_ratio_clipping=0.3,
+                               likelihood_ratio_clipping=0.25,
                                entropy_regularization=6.76e-5)
     network_config = NetworkConfig()
 

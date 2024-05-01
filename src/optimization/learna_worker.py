@@ -160,6 +160,11 @@ class LearnaWorker(Worker):
                 "fc_units2", lower=0, upper=64, default_value=20
             )
         )
+        config_space.add_hyperparameter(
+            CS.UniformIntegerHyperparameter(
+                "embedding_size", lower=0, upper=4, default_value=3
+            )
+        )
 
         return config_space
     

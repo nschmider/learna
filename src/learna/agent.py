@@ -174,10 +174,12 @@ def ppo_agent_kwargs(agent_config):
     optimizer = dict(type="adam", learning_rate=agent_config.learning_rate)
     return dict(
         batch_size=agent_config.batch_size,
+        discount=1.0,
         learning_rate=agent_config.learning_rate,
         likelihood_ratio_clipping=agent_config.likelihood_ratio_clipping,
         entropy_regularization=agent_config.entropy_regularization,
-        max_episode_timesteps=500
+        max_episode_timesteps=500,
+        multi_step=1
     )
 
 
