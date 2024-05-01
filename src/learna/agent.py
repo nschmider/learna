@@ -93,7 +93,7 @@ def get_network(network_config):
         dict(
             type="embedding",
             size=network_config.embedding_size,
-            num_embeddings=5
+            num_embeddings=4
         )
     ]
     convolution = [

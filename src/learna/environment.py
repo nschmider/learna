@@ -1,197 +1,18 @@
-import time
+from itertools import combinations, permutations, product
 
-from itertools import product
-from dataclasses import dataclass
-from distance import hamming
-
-import numpy as np
+# from axial_attention import AxialAttention
 from tensorforce.environments import Environment
-
+from tensorforce.agents import Agent
+from tensorforce.execution import Runner
+import tensorflow as tf
+import torch
 from RNA import fold
+import numpy as np
+from distance import hamming
+from dataclasses import dataclass
 
-
-@dataclass
-class RnaDesignEnvironmentConfig:
-    """
-    Dataclass for the configuration of the environment.
-
-    Default values describe:
-        mutation_threshold: Defines the minimum distance needed before applying the local
-            improvement step.
-        reward_exponent: A parameter to shape the reward function.
-        state_radius: The state representation is a (2*<state_radius> + 1)-gram
-            at each position.
-        use_conv: Bool to state if a convolutional network is used or not.
-        use_embedding: Bool to state if embedding is used or not.
-    """
-
-    mutation_threshold: int = 5
-    reward_exponent: float = 1.0
-    state_radius: int = 5
-    use_conv: bool = True
-    use_embedding: bool = False
-
-
-def _string_difference_indices(s1, s2):
-    """
-    Returns all indices where s1 and s2 differ.
-
-    Args:
-        s1: The first sequence.
-        s2: The second sequence.
-
-    Returns:
-        List of indices where s1 and s2 differ.
-    """
-    return [index for index in range(len(s1)) if s1[index] != s2[index]]
-
-
-def _encode_dot_bracket(secondary, env_config):
-    """
-    Encode the dot_bracket notated target structure. The encoding can either be binary
-    or by the embedding layer.
-
-    Args:
-        secondary: The target structure in dot_bracket notation.
-        env_config: The configuration of the environment.
-
-    Returns:
-        List of encoding for each site of the padded target structure.
-    """
-    padding = "=" * env_config.state_radius
-    padded_secondary = padding + secondary + padding
-
-    if True:#env_config.use_embedding:
-        site_encoding = {".": 0, "(": 1, ")": 2, "=": 3}
-    else:
-        site_encoding = {".": 0, "(": 1, ")": 1, "=": 0}
-
-    # Sites corresponds to 1 pixel with 1 channel if convs are applied directly
-    if env_config.use_conv and not True:#env_config.use_embedding:
-        return [[site_encoding[site]] for site in padded_secondary]
-    return [site_encoding[site] for site in padded_secondary]
-
-
-def _encode_pairing(secondary):
-    """TODO
-    """
-    pairing_encoding = [None] * len(secondary)
-    stack = []
-    for index, symbol in enumerate(secondary, 0):
-        if symbol == "(":
-            stack.append(index)
-        elif symbol == ")":
-            paired_site = stack.pop()
-            pairing_encoding[paired_site] = index
-            pairing_encoding[index] = paired_site
-    return pairing_encoding
-
-
-class _Target(object):
-    """TODO
-    Class of the target structure. Provides encodings and id.
-    """
-
-    _id_counter = 0
-
-    def __init__(self, dot_bracket, env_config):
-        """
-        Initialize a target structure.
-
-        Args:
-             dot_bracket: dot_bracket encoded target structure.
-             env_config: The environment configuration.
-        """
-        _Target._id_counter += 1
-        self.id = _Target._id_counter  # For processing results
-        self.dot_bracket = dot_bracket
-        self._pairing_encoding = _encode_pairing(self.dot_bracket)
-        self.padded_encoding = _encode_dot_bracket(self.dot_bracket, env_config)
-
-    def __len__(self):
-        return len(self.dot_bracket)
-
-    def get_paired_site(self, site):
-        """
-        Get the paired site for <site> (base pair).
-
-        Args:
-            site: The site to check the pairing site for.
-
-        Returns:
-            The site that pairs with <site> if exists.TODO
-        """
-        return self._pairing_encoding[site]
-
-
-class _Design(object):
-    """
-    Class of the designed candidate solution.
-    """
-
-    action_to_base = {0: "G", 1: "A", 2: "U", 3: "C"}
-    action_to_pair = {0: "GC", 1: "CG", 2: "AU", 3: "UA"}
-
-    def __init__(self, length=None, primary=None):
-        """
-        Initialize a candidate solution.
-
-        Args:
-            length: The length of the candidate solution.
-            primary: The sequence of the candidate solution.
-        """
-        if primary:
-            self._primary_list = primary
-        else:
-            self._primary_list = [None] * length
-        self._dot_bracket = None
-        self._current_site = 0
-
-    def get_mutated(self, mutations, sites):
-        """
-        Locally change the candidate solution.
-
-        Args:
-            mutations: Possible mutations for the specified sites
-            sites: The sites to be mutated
-
-        Returns:
-            A Design object with the mutated candidate solution.
-        """
-        mutatedprimary = self._primary_list.copy()
-        for site, mutation in zip(sites, mutations):
-            mutatedprimary[site] = mutation
-        return _Design(primary=mutatedprimary)
-
-    def assign_sites(self, action, site, paired_site=None):
-        """
-        Assign nucleotides to sites for designing a candidate solution.
-
-        Args:
-            action: The agents action to assign a nucleotide.
-            site: The site to which the nucleotide is assigned to.
-            paired_site: defines if the site is assigned with a base pair or not.
-        """
-        self._current_site += 1
-        if paired_site:
-            base_current, base_paired = self.action_to_pair[action]
-            self._primary_list[site] = base_current
-            self._primary_list[paired_site] = base_paired
-        else:
-            self._primary_list[site] = self.action_to_base[action]
-
-    @property
-    def first_unassigned_site(self):
-        try:
-            while self._primary_list[self._current_site] is not None:
-                self._current_site += 1
-            return self._current_site
-        except IndexError:
-            return None
-
-    @property
-    def primary(self):
-        return "".join(self._primary_list)
+from src.learna.utils.encodings import encode_dot_bracket, encode_pairing, probabilistic_pairing
+from src.learna.utils.helper_functions import custom_hamming, dot_bracket_to_matrix, mask, replace_x
 
 
 def _random_epoch_gen(data):
@@ -207,15 +28,21 @@ def _random_epoch_gen(data):
 
 
 @dataclass
-class EpisodeInfo:
+class RnaDesignEnvironmentConfig:
     """
-    Information class.
+    Dataclass for the configuration of the environment.
+
+    Default values describe:
+        matrix_size: The size of the matrix for the internal state.
+        reward_exponent: A parameter to shape the reward function.
     """
 
-    __slots__ = ["target_id", "time", "normalized_hamming_distance"]
-    target_id: int
-    time: float
-    normalized_hamming_distance: float
+    matrix_size: int = 32
+    padding_mode: str = "constant"
+    pad_lower: bool = False
+    reward_exponent: float = 1.0
+    state_radius: int = 32
+    masked: bool = True
 
 
 class RnaDesignEnvironment(Environment):
@@ -223,27 +50,59 @@ class RnaDesignEnvironment(Environment):
     The environment for RNA design using deep reinforcement learning.
     """
 
+    action_to_base = {
+        0: "C",
+        1: "A",
+        2: "U",
+        3: "G"
+    }
+
+    action_to_pair = {
+        0: "CG",
+        1: "AU",
+        2: "UA",
+        3: "GC"
+    }
+
     def __init__(self, dot_brackets, env_config):
-        """TODO
-        Initialize an environemnt.
+        """
+        Initialize an environment.
 
         Args:
+            dot_brackets: The training targets.
             env_config: The configuration of the environment.
         """
-        self._env_config = env_config
+        self._reward_exponent = env_config.reward_exponent
+        self._current_site = None
+        self._target_gen = _random_epoch_gen(dot_brackets)
+        self._target = None
+        self._matrix = None
+        self._matrix_size = env_config.matrix_size
+        self._padding_mode = env_config.padding_mode
+        self._pad_lower = env_config.pad_lower
+        self._rna_seq = None
+        self._pairs = None
+        # self._attention = AxialAttention(
+        #     dim=2,
+        #     dim_index=-1,
+        #     dim_heads=2,
+        #     num_dimensions=2,
+        #     heads=1
+        # )
+        self._state_radius = env_config.state_radius
+        self._padded_encoding = None
+        self.episode_stats = []
+        self.masked = env_config.masked
 
-        targets = [_Target(dot_bracket, self._env_config) for dot_bracket in dot_brackets]
-        self._target_gen = _random_epoch_gen(targets)
+    def states(self):
+        return dict(type='int', shape=(2 * self._state_radius + 1,))
+        return dict(type='float', shape=(self._matrix_size, self._matrix_size, 2))
 
-        self.target = None
-        self.design = None
-        self.episodes_info = []
+    def actions(self):
+        return dict(type='int', num_values=4)
 
     def __str__(self):
         return "RnaDesignEnvironment"
-
-    def seed(self, seed):
-        return None
 
     def reset(self):
         """
@@ -252,20 +111,185 @@ class RnaDesignEnvironment(Environment):
         Returns:
             The first state.
         """
-        self.target = next(self._target_gen)
-        self.design = _Design(len(self.target))
-        return self._get_state()
+        self._current_site = 0
+        # self._input_seq = "".join(np.random.choice(["A", "C", "G", "U"], size=50))
+        # self._target = fold(self._input_seq)[0]
+        self._target = next(self._target_gen)
+        # self._target = mask(self._target)
+        self._rna_seq = "-" * len(self._target)
 
-    def _apply_action(self, action):
+        # design_channel = dot_bracket_to_matrix(self._target)
+        # design_channel = np.expand_dims(design_channel, axis=-1)
+        # gene_channel = np.zeros(design_channel.shape)
+        # self._matrix = np.concatenate((gene_channel, design_channel), axis=-1)
+
+        # self._input_seq = self._input_seq[:3] + "X" + self._input_seq[3:20] + "X" + self._input_seq[20:33] + "X" + self._input_seq[33:]
+        # self._input_seq = replace_x(self._input_seq, min_length=10, max_length=20)
+        # self._target = mask(self._target)
+        # self._input_seq = mask(self._input_seq)
+        # self._rna_seq = self._input_seq.replace("N", "-")
+
+        self._padded_encoding = encode_dot_bracket(self._target, None, self._state_radius)
+        # self._pairing_encoding = [None] * len(self._target)#encode_pairing(self._target)
+        self._pairing_encoding, self._pairs = probabilistic_pairing(self._target)
+        state = self._get_state()
+        print(state)
+        return state
+
+    def execute(self, actions):
         """
-        Assign a nucleotide to a site.
+        Execute one interaction of the environment with the agent.
 
         Args:
-            action: The action chosen by the agent.
+            actions: Current action of the agent.
+
+        Returns:
+            state: The next state for the agent.
+            terminal: The signal for end of an episode.
+            reward: The reward if at terminal timestep, else 0.
         """
-        current_site = self.design.first_unassigned_site
-        paired_site = self.target.get_paired_site(current_site)  # None for unpaired sites
-        self.design.assign_sites(action, current_site, paired_site)
+        pair_index = self._pairing_encoding[self._current_site]
+        if pair_index:
+            cur_base, pair_base = self.action_to_pair[actions]
+            self._rna_seq = (
+                self._rna_seq[:self._current_site] +
+                cur_base +
+                self._rna_seq[self._current_site + 1:]
+            )
+            self._rna_seq = (
+                self._rna_seq[:pair_index] +
+                pair_base +
+                self._rna_seq[pair_index + 1:]
+            )
+            # self._matrix[self._current_site, self._current_site, 0] += (actions + 1)
+            # self._matrix[pair_index, pair_index, 0] += (4 - actions)
+        else:
+            # First matrix channel contains the actions taken
+            # self._matrix[self._current_site, self._current_site, 0] += (actions + 1)
+            self._rna_seq = (
+                self._rna_seq[:self._current_site] +
+                self.action_to_base[actions] +
+                self._rna_seq[self._current_site + 1:]
+            )
+        self._current_site = self._first_unassigned_site()
+
+        terminal = self._current_site == -1
+        if terminal:
+            next_state = None
+        else:
+            next_state = self._get_state()
+        reward = self._get_reward(terminal)
+        return next_state, terminal, reward
+
+    def _first_unassigned_site(self):
+        """
+        Finds the first unassigned site.
+
+        Returns:
+            int: The first unassigned site.
+        """
+        return self._rna_seq.find("-")
+
+    def _local_improvement(self, folded_design):
+        """
+        Compute Hamming distance of locally improved candidate solutions.
+
+        Returns:
+            The minimum Hamming distance of all improved candidate solutions.
+        """
+        min_distance = float('inf')
+        differing_sites = [i for i in range(len(self._target))
+                           if self._target[i] != folded_design[i]
+                           and self._target[i] != "N"]
+        for mutation in product('ACGU', repeat=len(differing_sites)):
+            mutated_sequence = self._get_mutated(differing_sites, mutation)
+            folded_mutation = fold(mutated_sequence)[0]
+            hamming_distance = custom_hamming(self._target, folded_mutation)
+            if hamming_distance < min_distance:
+                best_pred = mutated_sequence
+                min_distance = hamming_distance
+        if best_pred:
+            self._rna_seq = best_pred
+        return min_distance
+
+    def _local_improvement_pairs(self, folded_design):
+        # differing_sites = [i for i in range(len(self._target))
+        #                    if self._input_seq[i] == "N"
+        #                    and self._target[i] == "N"]
+        # bases = [self._rna_seq[i] for i in differing_sites]
+        # if len(differing_sites) >= 40 or len(differing_sites) == 0:
+        #     return
+        # min_distance = float('inf')
+        # for mutation in permutations(bases):
+        #     mutated_sequence = self._get_mutated(differing_sites, mutation)
+        #     folded_mutation = fold(mutated_sequence)[0]
+        #     hamming_distance = custom_hamming(self._target, folded_mutation)
+        #     min_distance = min(hamming_distance, min_distance)
+        if len(self._pairs) >= 5 or len(self._pairs) == 0:
+            return
+        best_mutated = self._rna_seq
+        for chosen_indices, pair_candidates in self._pairs:
+            min_distance = float('inf')
+            for changed_indices in permutations(pair_candidates, len(chosen_indices)):
+                mutated_sequence = self._switch(best_mutated, chosen_indices, changed_indices)
+                folded_mutation = fold(mutated_sequence)[0]
+                hamming_distance = custom_hamming(self._target, folded_mutation)
+                if hamming_distance < min_distance:
+                    best_mutated = mutated_sequence
+                    min_distance = hamming_distance
+        # if best_mutated:
+        #     self._rna_seq = best_mutated
+        return min_distance
+
+    def _local_improvement_without_unknowns(self, folded_design):
+        """
+        Compute Hamming distance of locally improved candidate solutions.
+
+        Returns:
+            The minimum Hamming distance of all improved candidate solutions.
+        """
+        min_distance = float('inf')
+        differing_sites = [i for i in range(len(self._target)) if self._target[i] != folded_design[i]]
+        for mutation in product('ACGU', repeat=len(differing_sites)):
+            mutated_sequence = self._get_mutated(differing_sites, mutation)
+            folded_mutation = fold(mutated_sequence)[0]
+            hamming_distance = hamming(folded_mutation, self._target)
+            if hamming_distance < min_distance:
+                min_distance = hamming_distance
+                best_prediction = folded_mutation
+        if best_prediction:
+            self._rna_seq = best_prediction
+        return min_distance
+
+    def _get_mutated(self, differing_sites, mutation):
+        """
+        Fills the RNA with mutated sites that differ from the RNA sequence.
+
+        Args:
+            differing_sites (list): The sites that differ from the target.
+            mutation (list): The bases to set.
+
+        Returns:
+            string: The mutated sequence.
+        """
+        seq = ""
+        mutated_set = 0
+        for i in range(len(self._rna_seq)):
+            if i in differing_sites:
+                seq += mutation[mutated_set]
+                mutated_set += 1
+                continue
+            seq += self._rna_seq[i]
+        return seq
+
+    def _switch(self, seq, indices1, indices2):
+        rna_seq_list = list(seq)
+        for index1, index2 in zip(indices1, indices2):
+            tmp = rna_seq_list[index1]
+            rna_seq_list[index1] = rna_seq_list[index2]
+            rna_seq_list[index2] = tmp
+            rna_seq_list = "".join(rna_seq_list)
+        return rna_seq_list
 
     def _get_state(self):
         """
@@ -274,30 +298,55 @@ class RnaDesignEnvironment(Environment):
         Returns:
             The next state.
         """
-        start = self.design.first_unassigned_site
-        return self.target.padded_encoding[
-            start : start + 2 * self._env_config.state_radius + 1
+        return self._padded_encoding[
+            self._current_site :
+            self._current_site + 2 * self._state_radius + 1
         ]
 
-    def _local_improvement(self, folded_design):
+    def _get_state_matrix(self):
         """
-        Compute Hamming distance of locally improved candidate solutions.
+        Get a state dependend on the padded encoding of the target structure.
 
         Returns:
-            The minimum Hamming distance of all imporved candidate solutions.
+            The next state.
         """
-        differing_sites = _string_difference_indices(
-            self.target.dot_bracket, folded_design
-        )
-        hamming_distances = []
-        for mutation in product("AGCU", repeat=len(differing_sites)):
-            mutated = self.design.get_mutated(mutation, differing_sites)
-            folded_mutated, _ = fold(mutated.primary)
-            hamming_distance = hamming(folded_mutated, self.target.dot_bracket)
-            hamming_distances.append(hamming_distance)
-            if hamming_distance == 0:  # For better timing results
-                return 0
-        return min(hamming_distances)
+        state = self._matrix
+        pad_width =  self._matrix_size - self._matrix.shape[0]
+        if pad_width > 0:
+            pad_width_upper = int(np.ceil(pad_width / 2))
+            pad_width_lower = int(np.floor(pad_width / 2))
+            if self._pad_lower:
+                pad_width_upper = 0
+                pad_width_lower = pad_width
+            # Pad the image if the desired matrix is bigger than the matrix
+            state = np.pad(
+                self._matrix,
+                pad_width=(
+                    (pad_width_upper, pad_width_lower),
+                    (pad_width_upper, pad_width_lower),
+                    (0, 0)),
+                mode=self._padding_mode)
+        if pad_width < 0:
+            # Crop the image if the desired matrix is smaller than the matrix
+            half_matrix_plus = int(np.ceil(self._matrix_size / 2))
+            half_matrix_minus = int(np.floor(self._matrix_size / 2))
+            min_index = max(self._current_site - half_matrix_plus, 0)
+            max_index = min(
+                min_index + self._matrix_size,
+                self._matrix.shape[0]
+            )
+            min_index = max_index - self._matrix_size
+            state = self._matrix[
+                min_index : max_index,
+                min_index : max_index,
+                :
+            ]
+        state = state[np.newaxis, ...]
+        state = torch.tensor(state, dtype=torch.float32)
+        # state = self._attention(state)
+        state = state.detach().numpy()
+        state = np.squeeze(state, axis=0)
+        return state
 
     def _get_reward(self, terminal):
         """
@@ -312,49 +361,28 @@ class RnaDesignEnvironment(Environment):
         if not terminal:
             return 0
 
-        folded_design, _ = fold(self.design.primary)
-        hamming_distance = hamming(folded_design, self.target.dot_bracket)
-        if 0 < hamming_distance < self._env_config.mutation_threshold:
-            hamming_distance = self._local_improvement(folded_design)
-        print(self._env_config.mutation_threshold)
+        pred_fold = fold(self._rna_seq)[0]
 
-        normalized_hamming_distance = hamming_distance / len(self.target)
+        if not self.masked:
+            hamming_distance = hamming(pred_fold, self._target)
+            if 0 < hamming_distance < 5:
+                hamming_distance = self._local_improvement_without_unknowns(pred_fold)
+            hamming_distance /= len(self._target)
+        if self.masked:
+            hamming_distance = custom_hamming(self._target, pred_fold)
+            changed_distance = self._local_improvement_pairs(pred_fold)
+            if changed_distance is not None:
+                hamming_distance = changed_distance
+            hamming_distance /= sum([site != "N" for site in self._target])
 
-        # For hparam optimization
-        episode_info = EpisodeInfo(
-            target_id=self.target.id,
-            time=time.time(),
-            normalized_hamming_distance=normalized_hamming_distance,
-        )
-        self.episodes_info.append(episode_info)
+        self.episode_stats.append((1-hamming_distance, self._rna_seq))
+        reward = (1 - hamming_distance) ** self._reward_exponent
+        
+        print()
+        print(f"RNA sequence: {self._rna_seq}")
+        print(f"Prediction: {pred_fold}")
+        print(f"Target: {self._target}")
+        print(f"Reward: {reward}")
+        return reward
 
-        return (1 - normalized_hamming_distance) ** self._env_config.reward_exponent
-
-    def execute(self, actions):
-        """
-        Execute one interaction of the environment with the agent.
-
-        Args:
-            action: Current action of the agent.
-
-        Returns:
-            state: The next state for the agent.
-            terminal: The signal for end of an episode.
-            reward: The reward if at terminal timestep, else 0.
-        """
-        self._apply_action(actions)
-
-        terminal = self.design.first_unassigned_site is None
-        state = None if terminal else self._get_state()
-        reward = self._get_reward(terminal)
-
-        return state, terminal, reward
-
-    def close(self):
-        pass
-
-    def states(self):
-        return dict(type='int', shape=(2 * self._env_config.state_radius + 1,))
-
-    def actions(self):
-        return dict(type='int', num_values=4)
+# random target
