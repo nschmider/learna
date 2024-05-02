@@ -105,7 +105,7 @@ class LearnaWorker(Worker):
         )
         config_space.add_hyperparameter(
             CS.UniformFloatHyperparameter(
-                "likelihood_ratio_clipping", lower=0, upper=0.5, default_value=0.3
+                "likelihood_ratio_clipping", lower=0, upper=0.5, log=True, default_value=0.3
             )
         )
         for layer_index in range(1, 3):
