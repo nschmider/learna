@@ -183,8 +183,8 @@ if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument("--result_dir")
     parser.add_argument("--input_file")
-    parser.add_argument("--num_episodes", type=int)
-    parser.add_argument("--masked", type=bool)
+    parser.add_argument("--num_episodes", type=int, default=1000)
+    parser.add_argument("--masked", type=bool, default=False)
     args = parser.parse_args()
 
     if args.input_file is None:
@@ -192,7 +192,7 @@ if __name__ == "__main__":
     else:
         dot_brackets = read_file(args.input_file)
 
-    env_config = RnaDesignEnvironmentConfig(reward_exponent=9.34, state_radius=32)#, masked=args.masked)
+    env_config = RnaDesignEnvironmentConfig(reward_exponent=9.34, state_radius=32, masked=args.masked)
     agent_config = AgentConfig(learning_rate=5.99e-4,
                                likelihood_ratio_clipping=0.25,
                                entropy_regularization=6.76e-5)

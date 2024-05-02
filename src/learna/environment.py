@@ -130,8 +130,10 @@ class RnaDesignEnvironment(Environment):
         # self._rna_seq = self._input_seq.replace("N", "-")
 
         self._padded_encoding = encode_dot_bracket(self._target, None, self._state_radius)
-        # self._pairing_encoding = [None] * len(self._target)#encode_pairing(self._target)
-        self._pairing_encoding, self._pairs = probabilistic_pairing(self._target)
+        if not self.masked:
+            self._pairing_encoding = encode_pairing(self._target)
+        if self.masked:
+            self._pairing_encoding, self._pairs = probabilistic_pairing(self._target)
         state = self._get_state()
         print(state)
         return state
