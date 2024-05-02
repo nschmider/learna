@@ -102,7 +102,7 @@ def get_network(network_config):
             size=size,
             window=window,
             stride=1,
-            padding="same",
+            padding="valid",
             activation="relu"
         )
         for size, window in zip(network_config.conv_channels, network_config.conv_sizes)
@@ -129,15 +129,19 @@ def get_network(network_config):
         for units in network_config.fc_layer_units if units >= 4
     ]
 
+    use_conv = any(map(lambda x: x > 1, network_config.conv_sizes))
     network = []
     
     # for conv_block in range(network_config.num_pooling_layers):
     #     index = conv_block * layers_before_pool
     #     network += convolution[index : index + layers_before_pool]
     #     network += pooling
-    network += embedding
-    network += convolution
-    network += flatten
+    if network_config.embedding_size:
+        network += embedding
+    if use_conv:
+        network += convolution
+    if use_conv or network_config.embedding_size:
+        network += flatten
     network += lstm * network_config.num_lstm_layers
     network += dense
     

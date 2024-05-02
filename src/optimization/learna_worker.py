@@ -120,7 +120,7 @@ class LearnaWorker(Worker):
             config_space.add_hyperparameter(
                 CS.UniformIntegerHyperparameter(
                     f"conv_channel{layer_index}",
-                    lower=0,
+                    lower=1,
                     upper=32,
                     default_value=16
                 )
@@ -132,7 +132,7 @@ class LearnaWorker(Worker):
         # )
         config_space.add_hyperparameter(
             CS.UniformIntegerHyperparameter(
-                "num_lstm_layers", lower=0, upper=1, default_value=0
+                "num_lstm_layers", lower=0, upper=1, default_value=1
             )
         )
         config_space.add_hyperparameter(
