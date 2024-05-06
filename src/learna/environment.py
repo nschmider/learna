@@ -51,17 +51,17 @@ class RnaDesignEnvironment(Environment):
     """
 
     action_to_base = {
-        0: "C",
+        0: "G",
         1: "A",
         2: "U",
-        3: "G"
+        3: "C"
     }
 
     action_to_pair = {
-        0: "CG",
-        1: "AU",
-        2: "UA",
-        3: "GC"
+        0: "GC",
+        1: "CG",
+        2: "AU",
+        3: "UA"
     }
 
     def __init__(self, dot_brackets, env_config):
@@ -135,7 +135,6 @@ class RnaDesignEnvironment(Environment):
         if self.masked:
             self._pairing_encoding, self._pairs = probabilistic_pairing(self._target)
         state = self._get_state()
-        print(state)
         return state
 
     def execute(self, actions):
@@ -181,6 +180,7 @@ class RnaDesignEnvironment(Environment):
         else:
             next_state = self._get_state()
         reward = self._get_reward(terminal)
+        print(next_state)
         return next_state, terminal, reward
 
     def _first_unassigned_site(self):
@@ -239,8 +239,8 @@ class RnaDesignEnvironment(Environment):
                 if hamming_distance < min_distance:
                     best_mutated = mutated_sequence
                     min_distance = hamming_distance
-        # if best_mutated:
-        #     self._rna_seq = best_mutated
+        if best_mutated:
+            self._rna_seq = best_mutated
         return min_distance
 
     def _local_improvement_without_unknowns(self, folded_design):
@@ -258,7 +258,7 @@ class RnaDesignEnvironment(Environment):
             hamming_distance = hamming(folded_mutation, self._target)
             if hamming_distance < min_distance:
                 min_distance = hamming_distance
-                best_prediction = folded_mutation
+                best_prediction = mutated_sequence
         if best_prediction:
             self._rna_seq = best_prediction
         return min_distance
@@ -380,11 +380,11 @@ class RnaDesignEnvironment(Environment):
         self.episode_stats.append((1-hamming_distance, self._rna_seq))
         reward = (1 - hamming_distance) ** self._reward_exponent
         
-        print()
-        print(f"RNA sequence: {self._rna_seq}")
-        print(f"Prediction: {pred_fold}")
-        print(f"Target: {self._target}")
-        print(f"Reward: {reward}")
+        # print()
+        # print(f"RNA sequence: {self._rna_seq}")
+        # print(f"Prediction: {pred_fold}")
+        # print(f"Target: {self._target}")
+        # print(f"Reward: {reward}")
         return reward
 
 # random target

@@ -8,6 +8,7 @@ from tensorforce.execution import Runner
 
 from src.data.read_data import read_train_data, filter_data, read_file
 from src.learna.environment import RnaDesignEnvironment, RnaDesignEnvironmentConfig
+from src.learna import origenvironment
 from src.learna.agent import AgentConfig, ppo_agent_kwargs, get_agent, NetworkConfig, get_network
 
 
@@ -150,7 +151,7 @@ def get_configs(config):
     conv_channels = tuple(
         config[f"conv_channel{layer}"] for layer in used_conv_layers
     )
-    
+
     network_config = NetworkConfig(
         conv_sizes=conv_sizes,
         conv_channels=conv_channels,
@@ -167,7 +168,7 @@ def get_configs(config):
         entropy_regularization=config["entropy_regularization"],
         likelihood_ratio_clipping=config["likelihood_ratio_clipping"],
     )
-    
+
     env_config = RnaDesignEnvironmentConfig(
         state_radius=config["state_radius"],
         reward_exponent=config["reward_exponent"],
@@ -182,8 +183,8 @@ def get_configs(config):
 if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument("--result_dir")
-    parser.add_argument("--input_file")
-    parser.add_argument("--num_episodes", type=int, default=1000)
+    parser.add_argument("--input_file", default="data/eterna/5.fasta")
+    parser.add_argument("--num_episodes", type=int, default=100)
     parser.add_argument("--masked", type=bool, default=False)
     args = parser.parse_args()
 
@@ -193,15 +194,14 @@ if __name__ == "__main__":
         dot_brackets = read_file(args.input_file)
 
     env_config = RnaDesignEnvironmentConfig(reward_exponent=9.34, state_radius=32, masked=args.masked)
+
     agent_config = AgentConfig(learning_rate=5.99e-4,
                                likelihood_ratio_clipping=0.25,
                                entropy_regularization=6.76e-5)
     network_config = NetworkConfig()
 
     num_episodes = args.num_episodes
-    if num_episodes is None:
-        num_episodes = 1000
-    
+
     rewards = training(env_config, agent_config, network_config, dot_brackets, num_episodes)
     pkl_file = args.result_dir
     if pkl_file is None:
@@ -209,7 +209,6 @@ if __name__ == "__main__":
     with open(pkl_file, 'wb') as file:
         pickle.dump(rewards, file)
     rewards = [reward[0] for reward in rewards]
-    # rewards = [episode_info.normalized_hamming_distance for episode_info in rewards]
     # rewards = [np.mean(rewards[i:i+100]) for i in range(0, len(rewards), num_episodes // 100)]
-    plt.plot(np.arange(len(rewards)), rewards)
+    plt.plot(np.arange(len(rewards)), rewards, label="new")
     plt.show()

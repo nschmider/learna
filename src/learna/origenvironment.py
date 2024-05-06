@@ -345,7 +345,6 @@ class RnaDesignEnvironment(Environment):
 
         terminal = self.design.first_unassigned_site is None
         state = None if terminal else self._get_state()
-        print(state)
         reward = self._get_reward(terminal)
 
         return state, terminal, reward
