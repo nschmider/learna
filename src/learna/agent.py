@@ -183,7 +183,8 @@ def ppo_agent_kwargs(agent_config):
         likelihood_ratio_clipping=agent_config.likelihood_ratio_clipping,
         entropy_regularization=agent_config.entropy_regularization,
         max_episode_timesteps=500,
-        multi_step=1
+        multi_step=1,
+        config=dict(buffer_observe=1000, device=None)
     )
 
 
