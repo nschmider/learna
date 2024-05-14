@@ -39,13 +39,13 @@ class LearnaWorker(Worker):
         env_config, agent_config, network_config = get_configs(config)
 
         agent = train_agent(env_config, agent_config, network_config, self.train_sequences, int(budget))
-        rewards = evaluate(env_config, agent, self.validation_sequences, 5)
+        rewards = evaluate(env_config, agent, self.validation_sequences, 1, max=200)
 
         save_path = Path(tmp_dir)
         save_path.mkdir(parents=True, exist_ok=True)
         agent.save(directory=save_path.joinpath("last_model"))
 
-        min_distances = 1 - np.max(rewards, 1)
+        min_distances = 1 - rewards
         solved_sequences = sum(min_distances == 0)
         normalized_solved_sequences = solved_sequences / len(self.validation_sequences)
         mean_distance = np.mean(min_distances)

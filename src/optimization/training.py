@@ -41,7 +41,7 @@ def make_synthetic_data(amount, length):
     return dot_brackets
 
 
-def evaluate(env_config, agent, dot_brackets, tries):
+def evaluate(env_config, agent, dot_brackets, tries, max=None):
     """
     Evaluating the agent on the validation data.
 
@@ -57,9 +57,15 @@ def evaluate(env_config, agent, dot_brackets, tries):
     """
     data_len = len(dot_brackets)
     environment = RnaDesignEnvironment(dot_brackets=dot_brackets, env_config=env_config)
-    rewards = np.zeros((data_len, tries))
 
-    for i in tqdm(range(data_len * tries)):
+    if max:
+        rewards = np.zeros(max)
+        it = range(max)
+    else:
+        rewards = np.zeros((data_len, tries))
+        it = range(data_len * tries)
+
+    for i in tqdm(it):
         # Initialize episode
         states = environment.reset()
         terminal = False
@@ -69,9 +75,12 @@ def evaluate(env_config, agent, dot_brackets, tries):
             actions = agent.act(states=states, deterministic=False)
             states, terminal, reward = environment.execute(actions=actions)
             agent.observe(terminal=terminal, reward=reward)
-        bracket = i % data_len
-        epoch = i // data_len
-        rewards[bracket, epoch] = reward ** (1/env_config.reward_exponent)
+        if max:
+            rewards[i] = reward ** (1/env_config.reward_exponent)
+        else:
+            bracket = i % data_len
+            epoch = i // data_len
+            rewards[bracket, epoch] = reward ** (1/env_config.reward_exponent)
     return rewards
 
 
