@@ -30,7 +30,7 @@ parser.add_argument('--run_id', type=str, help='A unique run id for this optimiz
 parser.add_argument('--nic_name', type=str, help='Which network interface to use for communication.')
 parser.add_argument('--shared_directory', type=str, help='A directory that is accessible for all processes, e.g. a NFS share.')
 parser.add_argument('--data_directory', type=str, help='A directory that contains the data.')
-parser.add_argument('--masked', type=bool, default=True)
+parser.add_argument('--masked', type=bool, default=False)
 
 args=parser.parse_args()
 
@@ -40,9 +40,9 @@ result_logger = hpres.json_result_logger(directory=args.shared_directory, overwr
 host = hpns.nic_name_to_host(args.nic_name)
 
 
-train_sequences = filter_data(read_train_data(args.data_directory), 32)
-validation_sequences = filter_data(read_validation_data(args.data_directory), 32)
-test_sequences = filter_data(read_test_data(args.data_directory), 32)
+train_sequences = read_train_data(args.data_directory)
+validation_sequences = read_validation_data(args.data_directory)
+test_sequences = read_test_data(args.data_directory)
 
 if args.worker:
     time.sleep(5)	# short artificial delay to make sure the nameserver is already running

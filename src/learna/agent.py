@@ -19,6 +19,7 @@ class NetworkConfig:
         fc_layer_units: The list of output units of the dense layers.
     """
     embedding_size: int = 3
+    embedding_activation: str = "none"
     conv_sizes: Tuple[int] = (17, 5)
     conv_channels: Tuple[int] = (7, 18)
     num_pooling_layers: int = 1
@@ -93,7 +94,8 @@ def get_network(network_config):
         dict(
             type="embedding",
             size=network_config.embedding_size,
-            num_embeddings=5
+            num_embeddings=4,
+            activation=network_config.embedding_activation
         )
     ]
     convolution = [

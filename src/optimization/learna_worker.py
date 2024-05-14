@@ -50,7 +50,7 @@ class LearnaWorker(Worker):
         normalized_solved_sequences = solved_sequences / len(self.validation_sequences)
         mean_distance = np.mean(min_distances)
 
-        return {"loss": mean_distance, "info": [normalized_solved_sequences, solved_sequences]}
+        return {"loss": float(mean_distance), "info": {"normalized_solved_sequences": float(normalized_solved_sequences), "solved_sequences": int(solved_sequences)}}
 
     @staticmethod
     def get_configspace():
@@ -105,7 +105,7 @@ class LearnaWorker(Worker):
         )
         config_space.add_hyperparameter(
             CS.UniformFloatHyperparameter(
-                "likelihood_ratio_clipping", lower=0, upper=0.5, log=True, default_value=0.3
+                "likelihood_ratio_clipping", lower=0.01, upper=0.5, log=True, default_value=0.3
             )
         )
         for layer_index in range(1, 3):
@@ -163,6 +163,11 @@ class LearnaWorker(Worker):
         config_space.add_hyperparameter(
             CS.UniformIntegerHyperparameter(
                 "embedding_size", lower=0, upper=4, default_value=3
+            )
+        )
+        config_space.add_hyperparameter(
+            CS.CategoricalHyperparameter(
+                "embedding_activation", choices=["relu", "sigmoid", "tanh", "none"], default_value="none"
             )
         )
 

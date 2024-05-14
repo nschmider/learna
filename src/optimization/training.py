@@ -71,7 +71,7 @@ def evaluate(env_config, agent, dot_brackets, tries):
             agent.observe(terminal=terminal, reward=reward)
         bracket = i % data_len
         epoch = i // data_len
-        rewards[bracket, epoch] = reward
+        rewards[bracket, epoch] = reward ** (1/env_config.reward_exponent)
     return rewards
 
 
@@ -159,7 +159,8 @@ def get_configs(config):
         fc_activation=config["fc_activation"],
         num_lstm_layers=config["num_lstm_layers"],
         lstm_units=config["lstm_units"],
-        lstm_horizon=config["lstm_horizon"]
+        lstm_horizon=config["lstm_horizon"],
+        embedding_activation=config["embedding_activation"]
     )
 
     agent_config = AgentConfig(

@@ -42,7 +42,7 @@ class RnaDesignEnvironmentConfig:
     pad_lower: bool = False
     reward_exponent: float = 1.0
     state_radius: int = 32
-    masked: bool = True
+    masked: bool = False
 
 
 class RnaDesignEnvironment(Environment):
