@@ -57,7 +57,7 @@ class LearnaWorker(Worker):
         config_space = CS.ConfigurationSpace()
         config_space.add_hyperparameter(
             CS.UniformIntegerHyperparameter(
-                "state_radius", lower=4, upper=64, default_value=32
+                "state_radius", lower=0, upper=64, default_value=32
             )
         )
         # config_space.add_hyperparameter(
@@ -91,7 +91,7 @@ class LearnaWorker(Worker):
         )
         config_space.add_hyperparameter(
             CS.UniformIntegerHyperparameter(
-                "batch_size", lower=32, upper=128, default_value=32
+                "batch_size", lower=32, upper=128, log=True, default_value=32
             )
         )
         config_space.add_hyperparameter(
@@ -108,7 +108,7 @@ class LearnaWorker(Worker):
                 "likelihood_ratio_clipping", lower=0.01, upper=0.5, log=True, default_value=0.3
             )
         )
-        for layer_index in range(1, 3):
+        for layer_index in range(1, 5):
             config_space.add_hyperparameter(
                 CS.UniformIntegerHyperparameter(
                     f"conv_size{layer_index}",
@@ -122,6 +122,7 @@ class LearnaWorker(Worker):
                     f"conv_channel{layer_index}",
                     lower=1,
                     upper=32,
+                    log=True,
                     default_value=16
                 )
             )
@@ -137,7 +138,7 @@ class LearnaWorker(Worker):
         )
         config_space.add_hyperparameter(
             CS.UniformIntegerHyperparameter(
-                "lstm_units", lower=1, upper=64, default_value=1
+                "lstm_units", lower=1, upper=64, log=True, default_value=1
             )
         )
         config_space.add_hyperparameter(
@@ -152,12 +153,12 @@ class LearnaWorker(Worker):
         )
         config_space.add_hyperparameter(
             CS.UniformIntegerHyperparameter(
-                "fc_units1", lower=0, upper=64, default_value=50
+                "fc_units1", lower=1, upper=64, log=True, default_value=50
             )
         )
         config_space.add_hyperparameter(
             CS.UniformIntegerHyperparameter(
-                "fc_units2", lower=0, upper=64, default_value=20
+                "fc_units2", lower=1, upper=64, log=True, default_value=20
             )
         )
         config_space.add_hyperparameter(

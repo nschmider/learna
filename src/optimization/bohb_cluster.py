@@ -119,7 +119,8 @@ rewards = evaluate(
     env_config=env_config,
     agent=best_agent,
     dot_brackets=test_sequences,
-    tries=5
+    tries=5,
+    max=1000
 )
 
 max_rewards = np.max(rewards, axis=1)

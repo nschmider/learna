@@ -150,7 +150,7 @@ def training(env_config, agent_config, network_config, dot_brackets, budget):
 def get_configs(config):
     used_conv_layers = [
         layer
-        for layer in range(1, 3)
+        for layer in range(1, 5)
         if config[f"conv_size{layer}"] > 0
         and config[f"conv_channel{layer}"] > 0
     ]
