@@ -169,7 +169,8 @@ def get_configs(config):
         num_lstm_layers=config["num_lstm_layers"],
         lstm_units=config["lstm_units"],
         lstm_horizon=config["lstm_horizon"],
-        embedding_activation=config["embedding_activation"]
+        embedding_activation=config["embedding_activation"],
+        state_radius=config["state_radius"]
     )
 
     agent_config = AgentConfig(

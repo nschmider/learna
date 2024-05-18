@@ -373,9 +373,9 @@ class RnaDesignEnvironment(Environment):
             hamming_distance /= len(self._target)
         if self.masked:
             hamming_distance = custom_hamming(self._target, pred_fold)
-            changed_distance = self._local_improvement_pairs(pred_fold)
-            if changed_distance is not None:
-                hamming_distance = changed_distance
+            # changed_distance = self._local_improvement_pairs(pred_fold)
+            # if changed_distance is not None:
+            #     hamming_distance = changed_distance
             hamming_distance /= sum([site != "N" for site in self._target])
 
         self.episode_stats.append((1-hamming_distance, self._rna_seq))

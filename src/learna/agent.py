@@ -28,6 +28,8 @@ class NetworkConfig:
     lstm_horizon: int = 5
     fc_activation: str = "relu"
     fc_layer_units: Tuple[int] = (57,)
+    padding: str = "valid"
+    state_radius: int = 32
 
 
 def get_network(network_config):
@@ -94,17 +96,20 @@ def get_network(network_config):
         dict(
             type="embedding",
             size=network_config.embedding_size,
-            num_embeddings=4,
+            num_embeddings=5,
             activation=network_config.embedding_activation
         )
     ]
+    valid_padding = False
+    valid_padding = (network_config.padding == "valid") and (network_config.state_radius - sum(network_config.conv_sizes) - len(network_config.conv_sizes) >= 1)
+    padding = "valid" if valid_padding else "same"
     convolution = [
         dict(
             type="conv1d",
             size=size,
             window=window,
             stride=1,
-            padding="valid",
+            padding=padding,
             activation="relu"
         )
         for size, window in zip(network_config.conv_channels, network_config.conv_sizes)

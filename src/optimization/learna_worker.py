@@ -40,13 +40,13 @@ class LearnaWorker(Worker):
         env_config.masked = True
 
         agent = train_agent(env_config, agent_config, network_config, self.train_sequences, int(budget))
-        rewards = evaluate(env_config, agent, self.validation_sequences, 1, max=200)
+        rewards = evaluate(env_config, agent, self.validation_sequences, 100)
 
         save_path = Path(tmp_dir)
         save_path.mkdir(parents=True, exist_ok=True)
         agent.save(directory=save_path.joinpath("last_model"))
 
-        min_distances = 1 - rewards
+        min_distances = 1 - np.max(rewards, axis=1)
         solved_sequences = sum(min_distances == 0)
         normalized_solved_sequences = solved_sequences / len(self.validation_sequences)
         mean_distance = np.mean(min_distances)
@@ -170,6 +170,11 @@ class LearnaWorker(Worker):
         config_space.add_hyperparameter(
             CS.CategoricalHyperparameter(
                 "embedding_activation", choices=["relu", "sigmoid", "tanh", "none"], default_value="none"
+            )
+        )
+        config_space.add_hyperparameter(
+            CS.CategoricalHyperparameter(
+                "padding", choices=["same", "valid"], default_value="valid"
             )
         )
 
