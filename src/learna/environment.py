@@ -227,7 +227,8 @@ class RnaDesignEnvironment(Environment):
         #     folded_mutation = fold(mutated_sequence)[0]
         #     hamming_distance = custom_hamming(self._target, folded_mutation)
         #     min_distance = min(hamming_distance, min_distance)
-        if len(self._pairs) >= 5 or len(self._pairs) == 0:
+        # if len(self._pairs) >= 5 or len(self._pairs) == 0:
+        if len(self._pairs) == 0:
             return
         best_mutated = self._rna_seq
         for chosen_indices, pair_candidates in self._pairs:

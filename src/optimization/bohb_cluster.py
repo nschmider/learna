@@ -12,7 +12,7 @@ from hpbandster.optimizers import BOHB as BOHB
 import numpy as np
 from tensorforce.agents import Agent
 
-from src.data.read_data import read_test_data, read_train_data, read_validation_data, filter_data
+from src.data.read_data import read_test_data, read_train_data, read_validation_data, filter_data, read_masked_test_data, read_masked_train_data, read_masked_validation_data
 from src.learna.environment import RnaDesignEnvironment
 from src.learna.agent import get_agent, get_network, ppo_agent_kwargs
 from src.optimization.learna_worker import LearnaWorker
@@ -40,9 +40,9 @@ result_logger = hpres.json_result_logger(directory=args.shared_directory, overwr
 host = hpns.nic_name_to_host(args.nic_name)
 
 
-train_sequences = read_train_data(args.data_directory)
-validation_sequences = read_validation_data(args.data_directory)
-test_sequences = read_test_data(args.data_directory)
+train_sequences = read_masked_train_data(args.data_directory)
+validation_sequences = read_masked_validation_data(args.data_directory)
+test_sequences = read_masked_test_data(args.data_directory)
 
 if args.worker:
     time.sleep(5)	# short artificial delay to make sure the nameserver is already running

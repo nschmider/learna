@@ -6,7 +6,7 @@ from matplotlib import pyplot as plt
 from tqdm import tqdm
 from tensorforce.execution import Runner
 
-from src.data.read_data import read_train_data, filter_data, read_file
+from src.data.read_data import read_train_data, filter_data, read_file, read_masked_train_data
 from src.learna.environment import RnaDesignEnvironment, RnaDesignEnvironmentConfig
 from src.learna import origenvironment
 from src.learna.agent import AgentConfig, ppo_agent_kwargs, get_agent, NetworkConfig, get_network
@@ -193,22 +193,27 @@ def get_configs(config):
 if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument("--result_dir")
-    parser.add_argument("--input_file", default="data/eterna/5.fasta")
+    parser.add_argument("--input_file")
     parser.add_argument("--num_episodes", type=int, default=100)
     parser.add_argument("--masked", type=bool, default=False)
     args = parser.parse_args()
 
     if args.input_file is None:
-        dot_brackets = read_train_data()
+        dot_brackets = read_masked_train_data()
     else:
         dot_brackets = read_file(args.input_file)
 
-    env_config = RnaDesignEnvironmentConfig(reward_exponent=9.34, state_radius=32, masked=args.masked)
+    # env_config = RnaDesignEnvironmentConfig(reward_exponent=9.34, state_radius=32, masked=args.masked)
 
-    agent_config = AgentConfig(learning_rate=5.99e-4,
-                               likelihood_ratio_clipping=0.25,
-                               entropy_regularization=6.76e-5)
-    network_config = NetworkConfig()
+    # agent_config = AgentConfig(learning_rate=5.99e-4,
+    #                            likelihood_ratio_clipping=0.25,
+    #                            entropy_regularization=6.76e-5)
+    # network_config = NetworkConfig()
+
+    best_config = {'batch_size': 32, 'conv_channel1': 27, 'conv_channel2': 18, 'conv_channel3': 1, 'conv_channel4': 2, 'conv_size1': 1, 'conv_size2': 12, 'conv_size3': 0, 'conv_size4': 19, 'embedding_activation': 'relu', 'embedding_size': 2, 
+'entropy_regularization': 0.0007539124898546786, 'fc_activation': 'relu', 'fc_units1': 1, 'fc_units2': 5, 'learning_rate': 0.0030439671015293113, 'likelihood_ratio_clipping': 0.026206273082208513, 'lstm_horizon': 24, 'lstm_units': 46, 'num_lstm_layers': 0, 'reward_exponent': 4.008848787121014, 'state_radius': 53}
+    env_config, agent_config, network_config = get_configs(best_config)
+    env_config.masked = args.masked
 
     num_episodes = args.num_episodes
 

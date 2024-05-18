@@ -9,7 +9,7 @@ from hpbandster.optimizers import BOHB
 import numpy as np
 from tensorforce.agents import Agent
 
-from src.data.read_data import read_test_data, read_train_data, read_validation_data, filter_data
+from src.data.read_data import read_test_data, read_train_data, read_validation_data, filter_data, read_masked_test_data, read_masked_train_data, read_masked_validation_data
 from src.learna.environment import RnaDesignEnvironment
 from src.learna.agent import get_agent, get_network, ppo_agent_kwargs
 from src.optimization.learna_worker import LearnaWorker
@@ -29,9 +29,9 @@ NS.start()
 # Besides the sleep_interval, we need to define the nameserver information and
 # the same run_id as above. After that, we can start the worker in the background,
 # where it will wait for incoming configurations to evaluate.
-train_sequences = filter_data(read_train_data(), 32)
-validation_sequences = filter_data(read_validation_data(), 32)
-test_sequences = filter_data(read_test_data(), 32)
+train_sequences = read_masked_train_data()
+validation_sequences = read_masked_validation_data()
+test_sequences = read_masked_test_data()
 w = LearnaWorker(
     num_cores=1,
     train_sequences=train_sequences,

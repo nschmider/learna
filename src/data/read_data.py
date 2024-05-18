@@ -61,5 +61,41 @@ def read_validation_data(data_dir=None):
     return dot_brackets
 
 
+def read_masked_train_data(data_dir=None):
+    file_path = "data/masked_train.fasta"
+    if data_dir is not None:
+        file_path = data_dir + "/" + file_path
+    dot_brackets = []
+    with open(file_path, "r") as file:
+        for line in file:
+            if not line.startswith(">"):
+                dot_brackets.append(line.strip())
+    return dot_brackets
+
+
+def read_masked_test_data(data_dir=None):
+    file_path = "data/masked_test.fasta"
+    if data_dir is not None:
+        file_path = data_dir + "/" + file_path
+    dot_brackets = []
+    with open(file_path, "r") as file:
+        for line in file:
+            if not line.startswith(">"):
+                dot_brackets.append(line.strip())
+    return dot_brackets
+
+
+def read_masked_validation_data(data_dir=None):
+    file_path = "data/masked_valid.fasta"
+    if data_dir is not None:
+        file_path = data_dir + "/" + file_path
+    dot_brackets = []
+    with open(file_path, "r") as file:
+        for line in file:
+            if not line.startswith(">"):
+                dot_brackets.append(line.strip())
+    return dot_brackets
+
+
 def filter_data(dot_brackets, max_length):
     return [dot_bracket for dot_bracket in dot_brackets if len(dot_bracket) <= max_length]

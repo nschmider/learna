@@ -37,6 +37,7 @@ class LearnaWorker(Worker):
         os.makedirs(tmp_dir, exist_ok=True)
 
         env_config, agent_config, network_config = get_configs(config)
+        env_config.masked = True
 
         agent = train_agent(env_config, agent_config, network_config, self.train_sequences, int(budget))
         rewards = evaluate(env_config, agent, self.validation_sequences, 1, max=200)
