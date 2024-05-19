@@ -253,8 +253,8 @@ if __name__ == "__main__":
     env_config, agent_config, network_config = get_configs(best_config)
     env_config.masked = args.masked
 
-    if agent_file is not None:
-        agent = Agent.load(agent_file)
+    if args.agent_file is not None:
+        agent = Agent.load(args.agent_file)
         rewards = test_agent(env_config, dot_brackets, num_episodes)
     else:
         rewards = training(env_config, agent_config, network_config, dot_brackets, num_episodes)
