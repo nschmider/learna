@@ -167,7 +167,7 @@ def test_agent(env_config, agent_file, dot_brackets, budget):
         The episode statistics
     """
     environment = RnaDesignEnvironment(dot_brackets=dot_brackets, env_config=env_config)
-    Agent.load(agent_file, environment=environment)
+    agent = Agent.load(agent_file, environment=environment)
     rewards = []
 
     for _ in tqdm(range(budget)):
