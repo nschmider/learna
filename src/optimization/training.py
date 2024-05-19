@@ -147,6 +147,38 @@ def training(env_config, agent_config, network_config, dot_brackets, budget):
     return environment.episode_stats
 
 
+def test_agent(env_config, agent, dot_brackets, budget):
+    """
+    Training with one configuration of the environment and the agent.
+    For evaluation purposes.
+
+    Args:
+        env_config: The configuration of the environment.
+        agent_config: The configuration of the agent.
+        network_config: The configuration of the agent's network.
+        dot_brackets: The learning targets.
+        budget: The budget for the configuration, here epochs.
+
+    Returns:
+        The episode statistics
+    """
+    environment = RnaDesignEnvironment(dot_brackets=dot_brackets, env_config=env_config)
+    rewards = []
+
+    for _ in tqdm(range(budget)):
+        # Initialize episode
+        states = environment.reset()
+        terminal = False
+        while not terminal:
+            # Episode timestep
+            actions = agent.act(states=states)
+            states, terminal, reward = environment.execute(actions=actions)
+            agent.observe(terminal=terminal, reward=reward)
+        rewards.append(reward)
+
+    return environment.episode_stats
+
+
 def get_configs(config):
     used_conv_layers = [
         layer
@@ -197,6 +229,9 @@ if __name__ == "__main__":
     parser.add_argument("--input_file")
     parser.add_argument("--num_episodes", type=int, default=100)
     parser.add_argument("--masked", type=bool, default=False)
+    parser.add_argument("--agent_file", type=str)
+    parser.add_argument("--config_file", type=str)
+    parser.add_argument("--config", type=tuple)
     args = parser.parse_args()
 
     if args.input_file is None:
@@ -211,14 +246,18 @@ if __name__ == "__main__":
     #                            entropy_regularization=6.76e-5)
     # network_config = NetworkConfig()
 
+    num_episodes = args.num_episodes
+
     best_config = {'batch_size': 32, 'conv_channel1': 27, 'conv_channel2': 18, 'conv_channel3': 1, 'conv_channel4': 2, 'conv_size1': 1, 'conv_size2': 12, 'conv_size3': 0, 'conv_size4': 19, 'embedding_activation': 'relu', 'embedding_size': 2, 
 'entropy_regularization': 0.0007539124898546786, 'fc_activation': 'relu', 'fc_units1': 1, 'fc_units2': 5, 'learning_rate': 0.0030439671015293113, 'likelihood_ratio_clipping': 0.026206273082208513, 'lstm_horizon': 24, 'lstm_units': 46, 'num_lstm_layers': 0, 'reward_exponent': 4.008848787121014, 'state_radius': 53}
     env_config, agent_config, network_config = get_configs(best_config)
     env_config.masked = args.masked
 
-    num_episodes = args.num_episodes
-
-    rewards = training(env_config, agent_config, network_config, dot_brackets, num_episodes)
+    if agent_file is not None:
+        agent = Agent.load(agent_file)
+        rewards = test_agent(env_config, dot_brackets, num_episodes)
+    else:
+        rewards = training(env_config, agent_config, network_config, dot_brackets, num_episodes)
     pkl_file = args.result_dir
     if pkl_file is None:
         pkl_file = 'list.pkl'

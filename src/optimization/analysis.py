@@ -32,10 +32,11 @@ inc_run = inc_runs[-1]
 sorted_runs = sorted(
     (run for run in all_runs if run.info is not None),
     key=lambda run: run.info.get("normalized_solved_sequences", 0),
-    reverse=True  # If you want to sort in descending order
+    reverse=True
 )
 
 best_id = sorted_runs[0].config_id
+print(best_id)
 best_config = id2conf[best_id]
 
 print("Best config:", best_config)
