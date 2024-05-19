@@ -4,6 +4,7 @@ import pickle
 import numpy as np
 from matplotlib import pyplot as plt
 from tqdm import tqdm
+from tensorforce.agents import Agent
 from tensorforce.execution import Runner
 
 from src.data.read_data import read_train_data, filter_data, read_file, read_masked_train_data
@@ -255,7 +256,7 @@ if __name__ == "__main__":
 
     if args.agent_file is not None:
         agent = Agent.load(args.agent_file)
-        rewards = test_agent(env_config, dot_brackets, num_episodes)
+        rewards = test_agent(env_config, agent, dot_brackets, num_episodes)
     else:
         rewards = training(env_config, agent_config, network_config, dot_brackets, num_episodes)
     pkl_file = args.result_dir
