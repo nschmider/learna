@@ -115,7 +115,7 @@ def train_agent(env_config, agent_config, network_config, dot_brackets, budget):
     return agent
 
 
-def training(env_config, agent_config, network_config, dot_brackets, budget):
+def training(env_config, agent_config, network_config, dot_brackets, budget, save_path=None):
     """
     Training with one configuration of the environment and the agent.
     For evaluation purposes.
@@ -134,7 +134,7 @@ def training(env_config, agent_config, network_config, dot_brackets, budget):
     agent = get_agent(environment, agent_config, network_config)
     rewards = []
 
-    for _ in tqdm(range(budget)):
+    for i in tqdm(range(budget)):
         # Initialize episode
         states = environment.reset()
         terminal = False
@@ -145,10 +145,13 @@ def training(env_config, agent_config, network_config, dot_brackets, budget):
             agent.observe(terminal=terminal, reward=reward)
         rewards.append(reward)
 
+        if (save_path is not None) and i % 1000 and i > 0:
+            agent.save(save_path)
+
     return environment.episode_stats
 
 
-def test_agent(env_config, agent, dot_brackets, budget):
+def test_agent(env_config, agent_file, dot_brackets, budget):
     """
     Training with one configuration of the environment and the agent.
     For evaluation purposes.
@@ -164,6 +167,7 @@ def test_agent(env_config, agent, dot_brackets, budget):
         The episode statistics
     """
     environment = RnaDesignEnvironment(dot_brackets=dot_brackets, env_config=env_config)
+    Agent.load(agent_file, environment=environment)
     rewards = []
 
     for _ in tqdm(range(budget)):
@@ -233,6 +237,7 @@ if __name__ == "__main__":
     parser.add_argument("--agent_file", type=str)
     parser.add_argument("--config_file", type=str)
     parser.add_argument("--config", type=tuple)
+    parser.add_argument("--save_path", type=str)
     args = parser.parse_args()
 
     if args.input_file is None:
@@ -255,8 +260,9 @@ if __name__ == "__main__":
     env_config.masked = args.masked
 
     if args.agent_file is not None:
-        agent = Agent.load(args.agent_file)
-        rewards = test_agent(env_config, agent, dot_brackets, num_episodes)
+        rewards = test_agent(env_config, args.agent_file, dot_brackets, num_episodes)
+    elif args.save is not None:
+        rewards = training(env_config, agent_config, network_config, dot_brackets, num_episodes, save_path=args.save_path)
     else:
         rewards = training(env_config, agent_config, network_config, dot_brackets, num_episodes)
     pkl_file = args.result_dir
