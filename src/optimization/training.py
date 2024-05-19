@@ -261,7 +261,7 @@ if __name__ == "__main__":
 
     if args.agent_file is not None:
         rewards = test_agent(env_config, args.agent_file, dot_brackets, num_episodes)
-    elif args.save is not None:
+    elif args.save_path is not None:
         rewards = training(env_config, agent_config, network_config, dot_brackets, num_episodes, save_path=args.save_path)
     else:
         rewards = training(env_config, agent_config, network_config, dot_brackets, num_episodes)
