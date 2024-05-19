@@ -191,7 +191,8 @@ def ppo_agent_kwargs(agent_config):
         entropy_regularization=agent_config.entropy_regularization,
         max_episode_timesteps=500,
         multi_step=1,
-        config=dict(buffer_observe=1000, device=None)
+        config=dict(buffer_observe=1000, device=None),
+        parallel_interactions=128
     )
 
 
