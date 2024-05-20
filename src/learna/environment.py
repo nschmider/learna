@@ -366,26 +366,52 @@ class RnaDesignEnvironment(Environment):
 
         pred_fold = fold(self._rna_seq)[0]
 
-        if not self.masked:
-            hamming_distance = hamming(pred_fold, self._target)
-            if 0 < hamming_distance < 5:
-                hamming_distance = self._local_improvement_without_unknowns(pred_fold)
-            hamming_distance /= len(self._target)
-        if self.masked:
-            hamming_distance = custom_hamming(self._target, pred_fold)
-            # changed_distance = self._local_improvement_pairs(pred_fold)
-            # if changed_distance is not None:
-            #     hamming_distance = changed_distance
-            hamming_distance /= sum([site != "N" for site in self._target])
+        reward = get_hypothesis_value(pred_fold, self._target, 100000, normalize=True)
+        reward = -0.2 * (len(self._target) - self._rna_seq.count("U")) / len(self._target)
 
-        self.episode_stats.append((1-hamming_distance, self._rna_seq))
-        reward = (1 - hamming_distance) ** self._reward_exponent
-        
-        # print()
-        # print(f"RNA sequence: {self._rna_seq}")
-        # print(f"Prediction: {pred_fold}")
-        # print(f"Target: {self._target}")
-        # print(f"Reward: {reward}")
+        # if not self.masked:
+        #     hamming_distance = hamming(pred_fold, self._target)
+        #     if 0 < hamming_distance < 5:
+        #         hamming_distance = self._local_improvement_without_unknowns(pred_fold)
+        #     hamming_distance /= len(self._target)
+        # if self.masked:
+        #     hamming_distance = custom_hamming(self._target, pred_fold)
+        #     # changed_distance = self._local_improvement_pairs(pred_fold)
+        #     # if changed_distance is not None:
+        #     #     hamming_distance = changed_distance
+        #     hamming_distance /= sum([site != "N" for site in self._target])
+
+        # self.episode_stats.append((1-hamming_distance, self._rna_seq))
+        # reward = (1 - hamming_distance) ** self._reward_exponent
+
         return reward
 
-# random target
+def get_hypothesis_value(db1, db2, n_iter, normalize=False):
+    db1 = get_encoding(db1)
+    db2 = get_encoding(db2)
+    hm = hamming(db1, db2)
+    if normalize:
+        hm = hm/len(db1)
+    # WL = (5*hm + 1)/6
+    # if infinite:
+    #     WL = 1 - hm
+    # else:
+    WL = (1 + (1 - hm) * n_iter) / (n_iter+1)
+
+    return WL
+
+def get_encoding(db):
+    # print(db)
+    encoding = [-1] * len(db)
+    stack = []
+    for i, c in enumerate(db):
+        if c == '.':
+            continue
+        elif c == '(':
+            stack.append(i)
+        elif c == ')':
+            j = stack.pop()
+            encoding[j] = i
+            encoding[i] = j
+    # print(encoding)
+    return encoding
