@@ -145,7 +145,7 @@ def training(env_config, agent_config, network_config, dot_brackets, budget, sav
             agent.observe(terminal=terminal, reward=reward)
         rewards.append(reward)
 
-        if (save_path is not None) and i % 1000 and i > 0:
+        if (save_path is not None) and (i % 1000 == 0) and i > 0:
             agent.save(save_path + f"/{i}.pkl")
 
     return environment.episode_stats
