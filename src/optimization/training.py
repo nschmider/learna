@@ -131,7 +131,7 @@ def training(env_config, agent_config, network_config, dot_brackets, budget, sav
         The episode statistics
     """
     environment = RnaDesignEnvironment(dot_brackets=dot_brackets, env_config=env_config)
-    agent = get_agent(environment, agent_config, network_config)
+    agent = get_agent(environment, agent_config, network_config)  
     rewards = []
 
     for i in tqdm(range(budget)):
@@ -158,8 +158,7 @@ def test_agent(env_config, agent_file, dot_brackets, budget):
 
     Args:
         env_config: The configuration of the environment.
-        agent_config: The configuration of the agent.
-        network_config: The configuration of the agent's network.
+        agent_file: The file in which the agent is stored.
         dot_brackets: The learning targets.
         budget: The budget for the configuration, here epochs.
 
@@ -168,6 +167,8 @@ def test_agent(env_config, agent_file, dot_brackets, budget):
     """
     environment = RnaDesignEnvironment(dot_brackets=dot_brackets, env_config=env_config)
     agent = Agent.load(agent_file, environment=environment)
+    print("TRAINABLE:", agent.model.is_trainable)
+    agent.model.is_trainable = True
     rewards = []
 
     for _ in tqdm(range(budget)):
@@ -241,7 +242,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if args.input_file is None:
-        dot_brackets = read_masked_train_data()
+        dot_brackets = read_train_data()
     else:
         dot_brackets = read_file(args.input_file)
 
