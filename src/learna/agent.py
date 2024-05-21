@@ -30,6 +30,7 @@ class NetworkConfig:
     fc_layer_units: Tuple[int] = (57,)
     padding: str = "valid"
     state_radius: int = 32
+    masked: bool = False
 
 
 def get_network(network_config):
@@ -92,11 +93,12 @@ def get_network(network_config):
     
     # pooling = [dict(type="pool2d", reduction="max")]
 
+    num_embeddings = 5 if network_config.masked else 4
     embedding = [
         dict(
             type="embedding",
             size=network_config.embedding_size,
-            num_embeddings=4,
+            num_embeddings=num_embeddings,
             activation=network_config.embedding_activation
         )
     ]

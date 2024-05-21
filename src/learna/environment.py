@@ -366,23 +366,23 @@ class RnaDesignEnvironment(Environment):
 
         pred_fold = fold(self._rna_seq)[0]
 
-        reward = get_hypothesis_value(pred_fold, self._target, 100000, normalize=True)
-        reward = -0.2 * (len(self._target) - self._rna_seq.count("U")) / len(self._target)
+        # reward = get_hypothesis_value(pred_fold, self._target, 100000, normalize=True)
+        # reward = -0.2 * (len(self._target) - self._rna_seq.count("U")) / len(self._target)
 
-        # if not self.masked:
-        #     hamming_distance = hamming(pred_fold, self._target)
-        #     if 0 < hamming_distance < 5:
-        #         hamming_distance = self._local_improvement_without_unknowns(pred_fold)
-        #     hamming_distance /= len(self._target)
-        # if self.masked:
-        #     hamming_distance = custom_hamming(self._target, pred_fold)
-        #     # changed_distance = self._local_improvement_pairs(pred_fold)
-        #     # if changed_distance is not None:
-        #     #     hamming_distance = changed_distance
-        #     hamming_distance /= sum([site != "N" for site in self._target])
+        if not self.masked:
+            hamming_distance = hamming(pred_fold, self._target)
+            if 0 < hamming_distance < 5:
+                hamming_distance = self._local_improvement_without_unknowns(pred_fold)
+            hamming_distance /= len(self._target)
+        if self.masked:
+            hamming_distance = custom_hamming(self._target, pred_fold)
+            # changed_distance = self._local_improvement_pairs(pred_fold)
+            # if changed_distance is not None:
+            #     hamming_distance = changed_distance
+            hamming_distance /= sum([site != "N" for site in self._target])
 
-        # self.episode_stats.append((1-hamming_distance, self._rna_seq))
-        # reward = (1 - hamming_distance) ** self._reward_exponent
+        self.episode_stats.append((1-hamming_distance, self._rna_seq))
+        reward = (1 - hamming_distance) ** self._reward_exponent
 
         return reward
 

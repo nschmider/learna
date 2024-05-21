@@ -259,6 +259,7 @@ if __name__ == "__main__":
 'entropy_regularization': 0.0007539124898546786, 'fc_activation': 'relu', 'fc_units1': 1, 'fc_units2': 5, 'learning_rate': 0.0030439671015293113, 'likelihood_ratio_clipping': 0.026206273082208513, 'lstm_horizon': 24, 'lstm_units': 46, 'num_lstm_layers': 0, 'reward_exponent': 4.008848787121014, 'state_radius': 53}
     env_config, agent_config, network_config = get_configs(best_config)
     env_config.masked = args.masked
+    network_config.masked = args.masked
 
     if args.agent_file is not None:
         rewards = test_agent(env_config, args.agent_file, dot_brackets, num_episodes)

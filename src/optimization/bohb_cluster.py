@@ -30,7 +30,7 @@ parser.add_argument('--run_id', type=str, help='A unique run id for this optimiz
 parser.add_argument('--nic_name', type=str, help='Which network interface to use for communication.')
 parser.add_argument('--shared_directory', type=str, help='A directory that is accessible for all processes, e.g. a NFS share.')
 parser.add_argument('--data_directory', type=str, help='A directory that contains the data.')
-parser.add_argument('--masked', type=bool, default=False)
+parser.add_argument('--masked', type=bool, action="store_true")
 
 args=parser.parse_args()
 
@@ -39,10 +39,14 @@ result_logger = hpres.json_result_logger(directory=args.shared_directory, overwr
 # Every process has to lookup the hostname
 host = hpns.nic_name_to_host(args.nic_name)
 
-
-train_sequences = read_masked_train_data(args.data_directory)
-validation_sequences = read_masked_validation_data(args.data_directory)
-test_sequences = read_masked_test_data(args.data_directory)
+if args.masked:
+    train_sequences = read_masked_train_data(args.data_directory)
+    validation_sequences = read_masked_validation_data(args.data_directory)
+    test_sequences = read_masked_test_data(args.data_directory)
+else:
+    train_sequences = read_train_data(args.data_directory)
+    validation_sequences = read_validation_data(args.data_directory)
+    test_sequences = read_test_data(args.data_directory)
 
 if args.worker:
     time.sleep(5)	# short artificial delay to make sure the nameserver is already running
@@ -51,7 +55,8 @@ if args.worker:
         train_sequences=train_sequences,
         validation_sequences=validation_sequences,
         run_id=args.run_id,
-        host=host
+        host=host,
+        masked=args.masked
     )
     w.load_nameserver_credentials(working_directory=args.shared_directory)
     w.run(background=False)
@@ -72,7 +77,8 @@ w = LearnaWorker(
     run_id=args.run_id,
     host=host,
     nameserver=ns_host,
-    nameserver_port=ns_port
+    nameserver_port=ns_port,
+    masked=args.masked
 )
 w.run(background=True)
 

@@ -12,11 +12,12 @@ from src.optimization.training import train_agent, evaluate, get_configs
 
 
 class LearnaWorker(Worker):
-    def __init__(self, num_cores, train_sequences, validation_sequences, **kwargs):
+    def __init__(self, num_cores, train_sequences, validation_sequences, masked=False, **kwargs):
         super().__init__(**kwargs)
         self.num_cores = num_cores
         self.train_sequences = train_sequences
         self.validation_sequences = validation_sequences
+        self.masked = masked
 
     def compute(self, config, budget, working_directory, config_id, **kwargs):
         """
@@ -37,10 +38,16 @@ class LearnaWorker(Worker):
         os.makedirs(tmp_dir, exist_ok=True)
 
         env_config, agent_config, network_config = get_configs(config)
-        env_config.masked = True
+        env_config.masked = self.masked
+        network_config.masked = self.masked
 
-        agent = train_agent(env_config, agent_config, network_config, self.train_sequences, int(budget))
-        rewards = evaluate(env_config, agent, self.validation_sequences, 100)
+        # agent = train_agent(env_config, agent_config, network_config, self.train_sequences, int(budget))
+        budget = budget // len(self.validation_sequences)
+        rewards = []
+        for seq in self.validation_sequences:
+            reward = evaluate(env_config, agent, [seq], budget, max=budget)
+            rewards.append(reward)
+        # rewards = evaluate(env_config, agent, self.validation_sequences, 100)
 
         save_path = Path(tmp_dir)
         save_path.mkdir(parents=True, exist_ok=True)
