@@ -268,10 +268,9 @@ if __name__ == "__main__":
     else:
         rewards = training(env_config, agent_config, network_config, dot_brackets, num_episodes)
     pkl_file = args.result_dir
-    if pkl_file is None:
-        pkl_file = 'list.pkl'
-    with open(pkl_file, 'wb') as file:
-        pickle.dump(rewards, file)
+    if pkl_file is not None:
+        with open(pkl_file, 'wb') as file:
+            pickle.dump(rewards, file)
     rewards = [reward[0] for reward in rewards]
     # rewards = [np.mean(rewards[i:i+100]) for i in range(0, len(rewards), num_episodes // 100)]
     plt.plot(np.arange(len(rewards)), rewards, label="new")

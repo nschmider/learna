@@ -29,15 +29,16 @@ NS.start()
 # Besides the sleep_interval, we need to define the nameserver information and
 # the same run_id as above. After that, we can start the worker in the background,
 # where it will wait for incoming configurations to evaluate.
-train_sequences = read_masked_train_data()
-validation_sequences = read_masked_validation_data()
-test_sequences = read_masked_test_data()
+train_sequences = read_train_data()
+validation_sequences = read_validation_data()
+test_sequences = read_test_data()
 w = LearnaWorker(
     num_cores=1,
     train_sequences=train_sequences,
     validation_sequences=validation_sequences,
     nameserver='127.0.0.1',
-    run_id='example1'
+    run_id='example1',
+    masked=False
 )
 w.run(background=True)
 

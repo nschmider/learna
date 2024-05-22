@@ -6,8 +6,8 @@ import ConfigSpace as CS
 from hpbandster.core.worker import Worker
 import numpy as np
 
-from src.learna.agent import AgentConfig, NetworkConfig
-from src.learna.environment import RnaDesignEnvironmentConfig
+from src.learna.agent import AgentConfig, NetworkConfig, get_agent
+from src.learna.environment import RnaDesignEnvironmentConfig, RnaDesignEnvironment
 from src.optimization.training import train_agent, evaluate, get_configs
 
 
@@ -42,9 +42,11 @@ class LearnaWorker(Worker):
         network_config.masked = self.masked
 
         # agent = train_agent(env_config, agent_config, network_config, self.train_sequences, int(budget))
-        budget = budget // len(self.validation_sequences)
+        budget = int(budget // len(self.validation_sequences))
         rewards = []
         for seq in self.validation_sequences:
+            environment = RnaDesignEnvironment(dot_brackets=[seq], env_config=env_config)
+            agent = get_agent(environment, agent_config, network_config)
             reward = evaluate(env_config, agent, [seq], budget, max=budget)
             rewards.append(reward)
         # rewards = evaluate(env_config, agent, self.validation_sequences, 100)
