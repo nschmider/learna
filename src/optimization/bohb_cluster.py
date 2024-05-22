@@ -30,7 +30,7 @@ parser.add_argument('--run_id', type=str, help='A unique run id for this optimiz
 parser.add_argument('--nic_name', type=str, help='Which network interface to use for communication.')
 parser.add_argument('--shared_directory', type=str, help='A directory that is accessible for all processes, e.g. a NFS share.')
 parser.add_argument('--data_directory', type=str, help='A directory that contains the data.')
-parser.add_argument('--masked', type=bool, action="store_true")
+parser.add_argument('--masked', action="store_true")
 
 args=parser.parse_args()
 

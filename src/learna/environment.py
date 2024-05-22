@@ -180,7 +180,6 @@ class RnaDesignEnvironment(Environment):
         else:
             next_state = self._get_state()
         reward = self._get_reward(terminal)
-        print(next_state)
         return next_state, terminal, reward
 
     def _first_unassigned_site(self):
