@@ -168,7 +168,9 @@ def test_agent(env_config, agent_file, dot_brackets, budget):
     environment = RnaDesignEnvironment(dot_brackets=dot_brackets, env_config=env_config)
     agent = Agent.load(agent_file, environment=environment)
     print("TRAINABLE:", agent.model.is_trainable)
-    agent.model.is_trainable = True
+    # agent.model.is_trainable = True
+    # agent.exploration = 1
+    # agent.entropy_regularization = 1
     rewards = []
 
     for _ in tqdm(range(budget)):
@@ -177,7 +179,7 @@ def test_agent(env_config, agent_file, dot_brackets, budget):
         terminal = False
         while not terminal:
             # Episode timestep
-            actions = agent.act(states=states)
+            actions = agent.act(states=states, deterministic=False)
             states, terminal, reward = environment.execute(actions=actions)
             agent.observe(terminal=terminal, reward=reward)
         rewards.append(reward)
@@ -232,10 +234,10 @@ def get_configs(config):
 if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument("--result_dir")
-    parser.add_argument("--input_file")
+    parser.add_argument("--input_file", default="data/eterna/3.fasta")
     parser.add_argument("--num_episodes", type=int, default=100)
     parser.add_argument("--masked", type=bool, default=False)
-    parser.add_argument("--agent_file", type=str)
+    parser.add_argument("--agent_file", type=str, default="models/run_1/149_0_2/last_model")
     parser.add_argument("--config_file", type=str)
     parser.add_argument("--config", type=tuple)
     parser.add_argument("--save_path", type=str)
@@ -255,8 +257,10 @@ if __name__ == "__main__":
 
     num_episodes = args.num_episodes
 
-    best_config = {'batch_size': 32, 'conv_channel1': 27, 'conv_channel2': 18, 'conv_channel3': 1, 'conv_channel4': 2, 'conv_size1': 1, 'conv_size2': 12, 'conv_size3': 0, 'conv_size4': 19, 'embedding_activation': 'relu', 'embedding_size': 2, 
-'entropy_regularization': 0.0007539124898546786, 'fc_activation': 'relu', 'fc_units1': 1, 'fc_units2': 5, 'learning_rate': 0.0030439671015293113, 'likelihood_ratio_clipping': 0.026206273082208513, 'lstm_horizon': 24, 'lstm_units': 46, 'num_lstm_layers': 0, 'reward_exponent': 4.008848787121014, 'state_radius': 53}
+#     best_config = {'batch_size': 32, 'conv_channel1': 27, 'conv_channel2': 18, 'conv_channel3': 1, 'conv_channel4': 2, 'conv_size1': 1, 'conv_size2': 12, 'conv_size3': 0, 'conv_size4': 19, 'embedding_activation': 'relu', 'embedding_size': 2, 
+# 'entropy_regularization': 0.0007539124898546786, 'fc_activation': 'relu', 'fc_units1': 1, 'fc_units2': 5, 'learning_rate': 0.0030439671015293113, 'likelihood_ratio_clipping': 0.026206273082208513, 'lstm_horizon': 24, 'lstm_units': 46, 'num_lstm_layers': 0, 'reward_exponent': 4.008848787121014, 'state_radius': 53}
+    best_config = {'batch_size': 72, 'conv_channel1': 1, 'conv_channel2': 2, 'conv_channel3': 11, 'conv_channel4': 25, 'conv_size1': 1, 'conv_size2': 
+19, 'conv_size3': 0, 'conv_size4': 6, 'embedding_activation': 'sigmoid', 'embedding_size': 4, 'entropy_regularization': 1.21881250331294e-05, 'fc_activation': 'relu', 'fc_units1': 23, 'fc_units2': 11, 'learning_rate': 0.0014211314957808614, 'likelihood_ratio_clipping': 0.23346152777814083, 'lstm_horizon': 18, 'lstm_units': 1, 'num_lstm_layers': 0, 'padding': 'same', 'reward_exponent': 5.790425815533215, 'state_radius': 55}
     env_config, agent_config, network_config = get_configs(best_config)
     env_config.masked = args.masked
     network_config.masked = args.masked
