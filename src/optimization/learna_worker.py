@@ -41,13 +41,13 @@ class LearnaWorker(Worker):
         env_config.masked = self.masked
         network_config.masked = self.masked
 
-        # agent = train_agent(env_config, agent_config, network_config, self.train_sequences, int(budget))
-        budget = int(budget // len(self.validation_sequences))
+        agent = train_agent(env_config, agent_config, network_config, self.train_sequences, int(budget))
+        # budget = int(budget // len(self.validation_sequences))
         rewards = []
         for seq in self.validation_sequences:
             environment = RnaDesignEnvironment(dot_brackets=[seq], env_config=env_config)
             agent = get_agent(environment, agent_config, network_config)
-            reward = evaluate(env_config, agent, [seq], budget, max=budget)
+            reward = evaluate(env_config, agent, [seq], 100, max=100)
             rewards.append(reward)
         # rewards = evaluate(env_config, agent, self.validation_sequences, 100)
 

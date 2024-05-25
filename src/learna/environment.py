@@ -364,9 +364,11 @@ class RnaDesignEnvironment(Environment):
             return 0
 
         pred_fold = fold(self._rna_seq)[0]
+        print(self._rna_seq)
 
         # reward = get_hypothesis_value(pred_fold, self._target, 100000, normalize=True)
-        # reward = -0.2 * (len(self._target) - self._rna_seq.count("U")) / len(self._target)
+        # reward += -100 * (len(self._target) - self._rna_seq.count("U")) / len(self._target)
+        # print(reward)
 
         if not self.masked:
             hamming_distance = hamming(pred_fold, self._target)
