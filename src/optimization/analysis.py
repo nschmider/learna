@@ -29,17 +29,18 @@ inc_runs = result.get_runs_by_id(inc_id)
 inc_run = inc_runs[-1]
 
 
-# sorted_runs = sorted(
-#     (run for run in all_runs if run.info is not None),
-#     key=lambda run: run.info.get("normalized_solved_sequences", 0),
-#     reverse=True
-# )
+sorted_runs = sorted(
+    (run for run in all_runs if run.info is not None),
+    key=lambda run: run.info.get("normalized_solved_sequences", 0),
+    reverse=True
+)
 
-# best_id = sorted_runs[0].config_id
-# print(best_id)
-# best_config = id2conf[best_id]
+best_id = sorted_runs[2].config_id
+print(sorted_runs[2].info)
+print(best_id)
+best_config = id2conf[best_id]
 
-# print("Best config:", best_config)
+print("Best config:", best_config)
 
 # We have access to all information: the config, the loss observed during
 #optimization, and all the additional information
@@ -47,10 +48,10 @@ inc_loss = inc_run.loss
 inc_config = id2conf[inc_id]['config']
 inc_test_loss = inc_run.info["normalized_solved_sequences"]
 
-print('Best found configuration:')
-print(inc_id)
-print(inc_config)
-print('It achieved accuracies of %f (validation) and solved %f of sequences.'%(1-inc_loss, inc_test_loss))
+# print('Best found configuration:')
+# print(inc_id)
+# print(inc_config)
+# print('It achieved accuracies of %f (validation) and solved %f of sequences.'%(1-inc_loss, inc_test_loss))
 
 
 # Let's plot the observed losses grouped by budget,
@@ -80,3 +81,5 @@ hpvis.performance_histogram_model_vs_random(all_runs, id2conf)
 
 plt.tight_layout()
 plt.savefig('plots/bohb/histogram_model_vs_random.png', bbox_inches='tight')
+
+print(id2conf[(342, 0, 8)])
