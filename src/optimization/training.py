@@ -237,7 +237,7 @@ if __name__ == "__main__":
     parser.add_argument("--input_file", default="data/eterna/3.fasta")
     parser.add_argument("--num_episodes", type=int, default=100)
     parser.add_argument("--masked", type=bool, default=False)
-    parser.add_argument("--agent_file", type=str, default="models/run_1/149_0_2/last_model")
+    parser.add_argument("--agent_file", type=str)
     parser.add_argument("--config_file", type=str)
     parser.add_argument("--config", type=tuple)
     parser.add_argument("--save_path", type=str)
@@ -266,9 +266,11 @@ if __name__ == "__main__":
 # 16, 'conv_size3': 12, 'conv_size4': 17, 'embedding_activation': 'relu', 'embedding_size': 1, 'entropy_regularization': 0.0006010803062589682, 'fc_activation': 'relu', 'fc_units1': 1, 'fc_units2': 1, 'learning_rate': 0.001057234282722869, 'likelihood_ratio_clipping': 0.18004801953074426, 'lstm_horizon': 46, 'lstm_units': 4, 'num_lstm_layers': 0, 'padding': 'same', 'reward_exponent': 7.508452172200106, 'state_radius': 49}
     # best_config = {'batch_size': 79, 'conv_channel1': 5, 'conv_channel2': 3, 'conv_channel3': 1, 'conv_channel4': 7, 'conv_size1': 10, 'conv_size2': 16, 'conv_size3': 9, 'conv_size4': 3, 'embedding_activation': 'tanh', 'embedding_size': 2, 'entropy_regularization': 0.0012588028008036656, 'fc_activation': 'relu', 'fc_units1': 1, 'fc_units2': 2, 'learning_rate': 0.0028568521628077595, 'likelihood_ratio_clipping': 0.09690986267739483, 'lstm_horizon': 26, 'lstm_units': 1, 'num_lstm_layers': 0, 'reward_exponent': 6.683938319641337, 'state_radius': 33}
 
-    best_config = {'batch_size': 43, 'conv_channel1': 1, 'conv_channel2': 21, 'conv_channel3': 14, 'conv_channel4': 4, 'conv_size1': 7, 'conv_size2': 16, 'conv_size3': 18, 'conv_size4': 9, 'embedding_activation': 'tanh', 'embedding_size': 0, 'entropy_regularization': 4.145127638841118e-06, 'fc_activation': 'tanh', 'fc_units1': 1, 'fc_units2': 50, 'learning_rate': 0.00027706582640493554, 
-'likelihood_ratio_clipping': 0.4139781862392649, 'lstm_horizon': 20, 'lstm_units': 1, 'num_lstm_layers': 0, 'padding': 'valid', 'reward_exponent': 9.287971886995857, 'state_radius': 51}
+    # best_config = {'batch_size': 43, 'conv_channel1': 1, 'conv_channel2': 21, 'conv_channel3': 14, 'conv_channel4': 4, 'conv_size1': 7, 'conv_size2': 16, 'conv_size3': 18, 'conv_size4': 9, 'embedding_activation': 'tanh', 'embedding_size': 0, 'entropy_regularization': 4.145127638841118e-06, 'fc_activation': 'tanh', 'fc_units1': 1, 'fc_units2': 50, 'learning_rate': 0.00027706582640493554, 
+# 'likelihood_ratio_clipping': 0.4139781862392649, 'lstm_horizon': 20, 'lstm_units': 1, 'num_lstm_layers': 0, 'padding': 'valid', 'reward_exponent': 9.287971886995857, 'state_radius': 51}
 
+    best_config = {'batch_size': 37, 'conv_channel1': 4, 'conv_channel2': 32, 'conv_channel3': 1, 'conv_channel4': 2, 'conv_size1': 5, 'conv_size2': 19, 'conv_size3': 15, 'conv_size4': 7, 'embedding_activation': 'tanh', 'embedding_size': 1, 'entropy_regularization': 5.078527594924104e-07, 'fc_activation': 'tanh', 'fc_units1': 4, 'fc_units2': 1, 'learning_rate': 0.0005256661963958559, 'likelihood_ratio_clipping': 0.04076962591988333, 'lstm_horizon': 11, 'lstm_units': 37, 'num_lstm_layers': 0, 'padding': 'valid', 'reward_exponent': 8.92220516680691, 'state_radius': 53}
+    
     env_config, agent_config, network_config = get_configs(best_config)
     env_config.masked = args.masked
     network_config.masked = args.masked
