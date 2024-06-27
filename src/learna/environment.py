@@ -1,18 +1,19 @@
-from itertools import combinations, permutations, product
+from itertools import permutations, product
 
 # from axial_attention import AxialAttention
 from tensorforce.environments import Environment
-from tensorforce.agents import Agent
-from tensorforce.execution import Runner
-import tensorflow as tf
 import torch
 from RNA import fold
 import numpy as np
 from distance import hamming
 from dataclasses import dataclass
 
-from src.learna.utils.encodings import encode_dot_bracket, encode_pairing, probabilistic_pairing
-from src.learna.utils.helper_functions import custom_hamming, dot_bracket_to_matrix, mask, replace_x
+from src.learna.utils.encodings import (
+    encode_dot_bracket, encode_pairing, probabilistic_pairing
+)
+from src.learna.utils.helper_functions import (
+    custom_hamming, dot_bracket_to_matrix, mask, replace_x
+)
 
 
 def _random_epoch_gen(data):
@@ -35,6 +36,10 @@ class RnaDesignEnvironmentConfig:
     Default values describe:
         matrix_size: The size of the matrix for the internal state.
         reward_exponent: A parameter to shape the reward function.
+        state_radius: The window for the state.
+        masked: If masked sites are supported.
+        padding_mode: The padding for the state matrix.
+        pad_lower: If state matrix should be padded on the lower side.
     """
 
     matrix_size: int = 32
@@ -47,7 +52,8 @@ class RnaDesignEnvironmentConfig:
 
 class RnaDesignEnvironment(Environment):
     """
-    The environment for RNA design using deep reinforcement learning.
+    The environment for RNA design using
+    deep reinforcement learning.
     """
 
     action_to_base = {
@@ -96,7 +102,8 @@ class RnaDesignEnvironment(Environment):
 
     def states(self):
         return dict(type='int', shape=(2 * self._state_radius + 1,))
-        return dict(type='float', shape=(self._matrix_size, self._matrix_size, 2))
+        return dict(type='float',
+                    shape=(self._matrix_size, self._matrix_size, 2))
 
     def actions(self):
         return dict(type='int', num_values=4)
@@ -106,13 +113,17 @@ class RnaDesignEnvironment(Environment):
 
     def reset(self):
         """
-        Reset the environment. First function called by runner. Returns first state.
+        Reset the environment. First function called by runner.
+        Returns first state.
 
         Returns:
             The first state.
         """
         self._current_site = 0
-        # self._input_seq = "".join(np.random.choice(["A", "C", "G", "U"], size=50))
+        # self._input_seq = "".join(
+        #                       np.random.choice(["A", "C", "G", "U"],
+        #                                        size=50)
+        #                   )
         # self._target = fold(self._input_seq)[0]
         self._target = next(self._target_gen)
         # self._target = mask(self._target)
@@ -121,19 +132,31 @@ class RnaDesignEnvironment(Environment):
         # design_channel = dot_bracket_to_matrix(self._target)
         # design_channel = np.expand_dims(design_channel, axis=-1)
         # gene_channel = np.zeros(design_channel.shape)
-        # self._matrix = np.concatenate((gene_channel, design_channel), axis=-1)
+        # self._matrix = np.concatenate(
+        #                    (gene_channel, design_channel),
+        #                    axis=-1
+        #                )
 
-        # self._input_seq = self._input_seq[:3] + "X" + self._input_seq[3:20] + "X" + self._input_seq[20:33] + "X" + self._input_seq[33:]
-        # self._input_seq = replace_x(self._input_seq, min_length=10, max_length=20)
+        # self._input_seq = (self._input_seq[:3] +
+        # "X" + self._input_seq[3:20] +
+        # "X" + self._input_seq[20:33] +
+        # "X" + self._input_seq[33:])
+        # self._input_seq = replace_x(self._input_seq,
+        #                             min_length=10,
+        #                             max_length=20)
         # self._target = mask(self._target)
         # self._input_seq = mask(self._input_seq)
         # self._rna_seq = self._input_seq.replace("N", "-")
 
-        self._padded_encoding = encode_dot_bracket(self._target, None, self._state_radius)
+        self._padded_encoding = encode_dot_bracket(self._target,
+                                                   None,
+                                                   self._state_radius)
         if not self.masked:
             self._pairing_encoding = encode_pairing(self._target)
         if self.masked:
-            self._pairing_encoding, self._pairs = probabilistic_pairing(self._target)
+            self._pairing_encoding, self._pairs = probabilistic_pairing(
+                                                      self._target
+                                                  )
         state = self._get_state()
         return state
 
@@ -162,11 +185,13 @@ class RnaDesignEnvironment(Environment):
                 pair_base +
                 self._rna_seq[pair_index + 1:]
             )
-            # self._matrix[self._current_site, self._current_site, 0] += (actions + 1)
+            # self._matrix[self._current_site, self._current_site, 0] +=
+            # (actions + 1)
             # self._matrix[pair_index, pair_index, 0] += (4 - actions)
         else:
             # First matrix channel contains the actions taken
-            # self._matrix[self._current_site, self._current_site, 0] += (actions + 1)
+            # self._matrix[self._current_site, self._current_site, 0] +=
+            # (actions + 1)
             self._rna_seq = (
                 self._rna_seq[:self._current_site] +
                 self.action_to_base[actions] +
@@ -214,6 +239,10 @@ class RnaDesignEnvironment(Environment):
         return min_distance
 
     def _local_improvement_pairs(self, folded_design):
+        """
+        Compute Hamming distance of solutions
+        where the potential pairs are shuffled.
+        """
         # differing_sites = [i for i in range(len(self._target))
         #                    if self._input_seq[i] == "N"
         #                    and self._target[i] == "N"]
@@ -232,10 +261,14 @@ class RnaDesignEnvironment(Environment):
         best_mutated = self._rna_seq
         for chosen_indices, pair_candidates in self._pairs:
             min_distance = float('inf')
-            for changed_indices in permutations(pair_candidates, len(chosen_indices)):
-                mutated_sequence = self._switch(best_mutated, chosen_indices, changed_indices)
+            for changed_indices in permutations(pair_candidates,
+                                                len(chosen_indices)):
+                mutated_sequence = self._switch(best_mutated,
+                                                chosen_indices,
+                                                changed_indices)
                 folded_mutation = fold(mutated_sequence)[0]
-                hamming_distance = custom_hamming(self._target, folded_mutation)
+                hamming_distance = custom_hamming(self._target,
+                                                  folded_mutation)
                 if hamming_distance < min_distance:
                     best_mutated = mutated_sequence
                     min_distance = hamming_distance
@@ -251,7 +284,8 @@ class RnaDesignEnvironment(Environment):
             The minimum Hamming distance of all improved candidate solutions.
         """
         min_distance = float('inf')
-        differing_sites = [i for i in range(len(self._target)) if self._target[i] != folded_design[i]]
+        differing_sites = [i for i in range(len(self._target))
+                           if self._target[i] != folded_design[i]]
         for mutation in product('ACGU', repeat=len(differing_sites)):
             mutated_sequence = self._get_mutated(differing_sites, mutation)
             folded_mutation = fold(mutated_sequence)[0]
@@ -301,7 +335,7 @@ class RnaDesignEnvironment(Environment):
             The next state.
         """
         return self._padded_encoding[
-            self._current_site :
+            self._current_site:
             self._current_site + 2 * self._state_radius + 1
         ]
 
@@ -313,7 +347,7 @@ class RnaDesignEnvironment(Environment):
             The next state.
         """
         state = self._matrix
-        pad_width =  self._matrix_size - self._matrix.shape[0]
+        pad_width = self._matrix_size - self._matrix.shape[0]
         if pad_width > 0:
             pad_width_upper = int(np.ceil(pad_width / 2))
             pad_width_lower = int(np.floor(pad_width / 2))
@@ -331,7 +365,7 @@ class RnaDesignEnvironment(Environment):
         if pad_width < 0:
             # Crop the image if the desired matrix is smaller than the matrix
             half_matrix_plus = int(np.ceil(self._matrix_size / 2))
-            half_matrix_minus = int(np.floor(self._matrix_size / 2))
+            # half_matrix_minus = int(np.floor(self._matrix_size / 2))
             min_index = max(self._current_site - half_matrix_plus, 0)
             max_index = min(
                 min_index + self._matrix_size,
@@ -339,8 +373,8 @@ class RnaDesignEnvironment(Environment):
             )
             min_index = max_index - self._matrix_size
             state = self._matrix[
-                min_index : max_index,
-                min_index : max_index,
+                min_index:max_index,
+                min_index:max_index,
                 :
             ]
         state = state[np.newaxis, ...]
@@ -358,7 +392,8 @@ class RnaDesignEnvironment(Environment):
             terminal: Bool defining if final timestep is reached yet.
 
         Returns:
-            The reward at the terminal timestep or 0 if not at the terminal timestep.
+            The reward at the terminal timestep
+            or 0 if not at the terminal timestep.
         """
         if not terminal:
             return 0
@@ -366,14 +401,12 @@ class RnaDesignEnvironment(Environment):
         pred_fold = fold(self._rna_seq)[0]
         print(self._rna_seq)
 
-        # reward = get_hypothesis_value(pred_fold, self._target, 100000, normalize=True)
-        # reward += -100 * (len(self._target) - self._rna_seq.count("U")) / len(self._target)
-        # print(reward)
-
         if not self.masked:
             hamming_distance = hamming(pred_fold, self._target)
             if 0 < hamming_distance < 5:
-                hamming_distance = self._local_improvement_without_unknowns(pred_fold)
+                hamming_distance = self._local_improvement_without_unknowns(
+                                       pred_fold
+                                   )
             hamming_distance /= len(self._target)
         if self.masked:
             hamming_distance = custom_hamming(self._target, pred_fold)
@@ -386,6 +419,7 @@ class RnaDesignEnvironment(Environment):
         reward = (1 - hamming_distance) ** self._reward_exponent
 
         return reward
+
 
 def get_hypothesis_value(db1, db2, n_iter, normalize=False):
     db1 = get_encoding(db1)
@@ -400,6 +434,7 @@ def get_hypothesis_value(db1, db2, n_iter, normalize=False):
     WL = (1 + (1 - hm) * n_iter) / (n_iter+1)
 
     return WL
+
 
 def get_encoding(db):
     # print(db)

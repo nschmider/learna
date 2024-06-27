@@ -120,11 +120,11 @@ def get_meta_freinet_config():
             "embedding_activation", choices=["relu", "sigmoid", "tanh", "none"], default_value="none"
         )
     )
-    config_space.add_hyperparameter(
-        CS.CategoricalHyperparameter(
-            "padding", choices=["same", "valid"], default_value="valid"
-        )
-    )
+    # config_space.add_hyperparameter(
+    #     CS.CategoricalHyperparameter(
+    #         "padding", choices=["same", "valid"], default_value="valid"
+    #     )
+    # )
 
     return config_space
 
@@ -247,11 +247,11 @@ def get_freinet_config():
             "embedding_activation", choices=["relu", "sigmoid", "tanh", "none"], default_value="none"
         )
     )
-    config_space.add_hyperparameter(
-        CS.CategoricalHyperparameter(
-            "padding", choices=["same", "valid"], default_value="valid"
-        )
-    )
+    # config_space.add_hyperparameter(
+    #     CS.CategoricalHyperparameter(
+    #         "padding", choices=["same", "valid"], default_value="valid"
+    #     )
+    # )
 
     return config_space
 
@@ -375,11 +375,11 @@ def get_fine_tuning_config():
             "embedding_activation", choices=["relu", "sigmoid", "tanh", "none"], default_value="none"
         )
     )
-    config_space.add_hyperparameter(
-        CS.CategoricalHyperparameter(
-            "padding", choices=["same", "valid"], default_value="valid"
-        )
-    )
+    # config_space.add_hyperparameter(
+    #     CS.CategoricalHyperparameter(
+    #         "padding", choices=["same", "valid"], default_value="valid"
+    #     )
+    # )
 
     return config_space
 

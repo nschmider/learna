@@ -401,11 +401,11 @@ if __name__ == '__main__':
         "fc_units2",
         "embedding_size",
         "embedding_activation",
-        "padding"
+        # "padding"
     ]
 
     analyse_bohb_run(args.run)
 
     generate_fanova_plots(args.path, args.run, args.out_dir, args.mode, args.n, params)
 
-    create_pairwise_marginals(args.path, args.run, args.out_dir, args.mode, params)
+    # create_pairwise_marginals(args.path, args.run, args.out_dir, args.mode, params)

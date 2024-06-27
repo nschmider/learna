@@ -35,12 +35,12 @@ sorted_runs = sorted(
     reverse=True
 )
 
-best_id = sorted_runs[2].config_id
-print(sorted_runs[2].info)
-print(best_id)
-best_config = id2conf[best_id]
+# best_id = sorted_runs[2].config_id
+# print(sorted_runs[2].info)
+# print(best_id)
+# best_config = id2conf[best_id]
 
-print("Best config:", best_config)
+# print("Best config:", best_config)
 # print(id2conf[(342, 0, 8)])
 
 # We have access to all information: the config, the loss observed during
