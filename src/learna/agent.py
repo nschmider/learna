@@ -19,18 +19,14 @@ class NetworkConfig:
         fc_layer_units: The list of output units of the dense layers.
     """
     embedding_size: int = 3
-    embedding_activation: str = "none"
     conv_sizes: Tuple[int] = (17, 5)
     conv_channels: Tuple[int] = (7, 18)
     num_pooling_layers: int = 1
     lstm_units: int = 28
     num_lstm_layers: int = 1
-    lstm_horizon: int = 5
+    lstm_horizon: int = 12
     fc_activation: str = "relu"
     fc_layer_units: Tuple[int] = (57,)
-    padding: str = "valid"
-    state_radius: int = 32
-    masked: bool = False
 
 
 def get_network(network_config):
@@ -44,7 +40,8 @@ def get_network(network_config):
         The policy network of the agent.
     """
     # convolution1 = []
-    # for size, window in zip(network_config.conv_channels, network_config.conv_sizes):
+    # for size, window in zip(network_config.conv_channels,
+    #                         network_config.conv_sizes):
     #     convolution1.append(dict(
     #         type="conv2d",
     #         size=size,
@@ -90,31 +87,27 @@ def get_network(network_config):
     #         network_config.conv_sizes
     #     )
     # ]
-    
+
     # pooling = [dict(type="pool2d", reduction="max")]
 
-    num_embeddings = 5 if network_config.masked else 4
     embedding = [
         dict(
             type="embedding",
             size=network_config.embedding_size,
-            num_embeddings=num_embeddings,
-            activation=network_config.embedding_activation
+            num_embeddings=5
         )
     ]
-    valid_padding = False
-    valid_padding = (network_config.padding == "valid") and (network_config.state_radius - sum(network_config.conv_sizes) - len(network_config.conv_sizes) >= 1)
-    padding = "valid" if valid_padding else "same"
     convolution = [
         dict(
             type="conv1d",
             size=size,
             window=window,
             stride=1,
-            padding=padding,
+            padding="same",
             activation="relu"
         )
-        for size, window in zip(network_config.conv_channels, network_config.conv_sizes)
+        for size, window in zip(network_config.conv_channels,
+                                network_config.conv_sizes)
         if window > 1
     ]
 
@@ -122,9 +115,9 @@ def get_network(network_config):
 
     lstm = [
         dict(
-        type="lstm",
-        size=network_config.lstm_units,
-        horizon=network_config.lstm_horizon
+            type="lstm",
+            size=network_config.lstm_units,
+            horizon=network_config.lstm_horizon
         )
     ]
 
@@ -138,22 +131,18 @@ def get_network(network_config):
         for units in network_config.fc_layer_units if units >= 4
     ]
 
-    use_conv = any(map(lambda x: x > 1, network_config.conv_sizes))
     network = []
-    
+
     # for conv_block in range(network_config.num_pooling_layers):
     #     index = conv_block * layers_before_pool
     #     network += convolution[index : index + layers_before_pool]
     #     network += pooling
-    if network_config.embedding_size:
-        network += embedding
-    if use_conv:
-        network += convolution
-    if use_conv or network_config.embedding_size:
-        network += flatten
+    network += embedding
+    network += convolution
+    network += flatten
     network += lstm * network_config.num_lstm_layers
     network += dense
-    
+
     return network
 
 
@@ -165,13 +154,14 @@ class AgentConfig:
     Default values describe:
         learning_rate: The learning rate to use by PPO.
         batch_size: Integer of the batch size.
-        likelihood_ratio_clipping: Likelihood ratio clipping for policy gradient.
+        likelihood_ratio_clipping: Likelihood ratio clipping
+                                   for policy gradient.
         entropy_regularization: Entropy regularization weight.
     """
-    learning_rate: float = 5.99e-4
+    learning_rate: float = 5e-4
     batch_size: int = 126
     likelihood_ratio_clipping: float = 0.3
-    entropy_regularization: float = 6.76e-5
+    entropy_regularization: float = 1.5e-3
 
 
 def ppo_agent_kwargs(agent_config):
@@ -184,17 +174,13 @@ def ppo_agent_kwargs(agent_config):
     Returns:
         Dictionary of arguments for initialization of a PPO agent.
     """
-    optimizer = dict(type="adam", learning_rate=agent_config.learning_rate)
+    # optimizer = dict(type="adam", learning_rate=agent_config.learning_rate)
     return dict(
         batch_size=agent_config.batch_size,
-        discount=1.0,
         learning_rate=agent_config.learning_rate,
         likelihood_ratio_clipping=agent_config.likelihood_ratio_clipping,
         entropy_regularization=agent_config.entropy_regularization,
-        max_episode_timesteps=500,
-        multi_step=1,
-        config=dict(buffer_observe=1000, device=None),
-        parallel_interactions=128
+        max_episode_timesteps=500
     )
 
 
@@ -205,7 +191,7 @@ def get_agent(environment, agent_config, network_config):
     Args:
         environment: The environment the agent acts in.
         agent_config: The configuration of the agent.
-    
+
     Returns:
         The agent.
     """

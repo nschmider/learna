@@ -111,6 +111,7 @@ single_bracket_to_int = {
     ("N", "N"): 47
 }
 
+
 def encode_dot_bracket(dot_bracket, rna_seq, state_radius):
     """
     Encodes the dot-bracket notation as a numerical sequence.
@@ -129,8 +130,10 @@ def encode_dot_bracket(dot_bracket, rna_seq, state_radius):
         return [design_to_int_test[site] for site in dot_bracket]
     rna_seq = padding + rna_seq + padding
     if "|" in rna_seq:
-        return [single_bracket_to_int[site] for site in zip(rna_seq, dot_bracket)]
+        return [single_bracket_to_int[site]
+                for site in zip(rna_seq, dot_bracket)]
     return [design_to_int_test[site[1]] for site in zip(rna_seq, dot_bracket)]
+
 
 def encode_pairing_without_N(target):
     """Encodes the pairings of the dot-bracket notation.
@@ -158,7 +161,8 @@ def encode_pairing_without_N(target):
             pairing_encoding[paired_site] = index
             pairing_encoding[index] = paired_site
     return pairing_encoding
-    
+
+
 def encode_pairing(target):
     """
     Encodes the pairings of the dot-bracket notation.
@@ -190,6 +194,7 @@ def encode_pairing(target):
             stack = []
             pseudo_knots = []
     return pairing_encoding
+
 
 def probabilistic_pairing(target):
     """
@@ -273,7 +278,6 @@ def probabilistic_pairing(target):
     #         target_site = "("
     #         if not opening_possible or np.random.choice([True, False]):
     #             target_site
-
 
     # count how many closing brackets come before/after a certain point and
     # how many opening brackets come before/after a certain point
@@ -401,7 +405,7 @@ def probabilistic_pairing(target):
                 list_target[i] = "["
             target = "".join(list_target)
             square_indices_set.update(n_chosen)
-    
+
     # replace the remaining Ns
     target = target.replace("N", ".")
 

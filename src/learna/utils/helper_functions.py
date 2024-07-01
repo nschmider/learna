@@ -1,5 +1,6 @@
 import numpy as np
 
+
 def dot_bracket_to_matrix(dot_bracket):
     """
     Computes an adjacency matrix from the dot-bracket notation.
@@ -24,12 +25,14 @@ def dot_bracket_to_matrix(dot_bracket):
         i += 1
     return matrix
 
+
 def sparse_to_matrix(sparse_matrix):
     matrix = np.zeros((100, 100))
     for site1, site2 in sparse_matrix:
         matrix[site1, site2] += 1
         matrix[site2, site1] += 1
     return matrix
+
 
 def mask(input_seq):
     """
@@ -42,7 +45,7 @@ def mask(input_seq):
         The masked sequence.
     """
     output = ""
-    masking_prob = 0.2
+    masking_prob = 0.1
     rand = np.random.binomial(n=1, p=masking_prob, size=len(input_seq))
     for i in range(len(input_seq)):
         if rand[i]:
@@ -51,33 +54,6 @@ def mask(input_seq):
             output += input_seq[i]
     return output
 
-
-def mask_parts(input_seq):
-    """
-    Masks the given sequence randomly with sequences of Ns.
-
-    Args:
-        input_seq: The sequence to mask
-
-    Returns:
-        The masked sequence.
-    """
-    input_seq = list(input_seq)
-    i = 0
-    while i < len(input_seq):
-        insert_seq = np.random.choice([True, False], p=[0.05, 0.95])
-        if not insert_seq:
-            i += 1
-            continue
-        sites_left = len(input_seq) - i
-        print(sites_left)
-        # insert at most 10 Ns
-        max_n_seq_length = min(10, sites_left)
-        ns_to_insert = np.random.choice(np.arange(1, max_n_seq_length + 1))
-        input_seq[i : i + ns_to_insert] = ["N"] * ns_to_insert
-        i += ns_to_insert + 1
-    input_seq = "".join(input_seq)
-    return input_seq
 
 def replace_x(sequence, min_length, max_length):
     """
@@ -111,11 +87,12 @@ def replace_x(sequence, min_length, max_length):
     # chosen such that in 99.8% of cases, the sum will lie in the interval
     std_dev = 1/6 * (max_length - min_length) / np.sqrt(num_xs)
     new_seq = ""
-    
+
     while True:
         # generate random numbers
         # first mean is the middle of the interval
-        # the numbers should add up to, divided by the amount of random variables
+        # the numbers should add up to,
+        # divided by the amount of random variables
         random_N_lens = [mean] * num_xs
         random_N_lens += np.random.randn(num_xs) * std_dev
         random_N_lens = [round(length) for length in random_N_lens]
@@ -129,8 +106,11 @@ def replace_x(sequence, min_length, max_length):
         new_seq += char
     return new_seq
 
+
 def custom_hamming(target_design, folded):
-    """Computes the hamming distance and allows for | (closing or opening brackets).
+    """
+    Computes the hamming distance
+    and allows for | (closing or opening brackets).
 
     Args:
         target_design (string): The target
@@ -142,8 +122,8 @@ def custom_hamming(target_design, folded):
     return sum(
         [
             not (folded_site == target_site or
-            folded_site in ['(', ')'] and target_site == '|' or
-            target_site == "N")
+                 folded_site in ['(', ')'] and target_site == '|' or
+                 target_site == "N")
             for i, (folded_site, target_site) in
             enumerate(zip(folded, target_design))
         ]
